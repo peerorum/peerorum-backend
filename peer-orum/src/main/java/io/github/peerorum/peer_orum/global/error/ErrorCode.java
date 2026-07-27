@@ -18,7 +18,10 @@ public enum ErrorCode {
     // Auth
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "Unauthorized"),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A002", "Invalid Token"),
-    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A003", "Expired Token");
+    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A003", "Expired Token"),
+
+    // AI
+    GEMINI_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI001", "Gemini API Integration Error");
 
     private final HttpStatus status;
     private final String code;
