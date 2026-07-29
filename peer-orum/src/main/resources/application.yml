@@ -66,6 +66,7 @@ spring:
 jwt:
   secret: ${JWT_SECRET:vdfio394jfi30j49gj4309gj340gjf340gjf340gjf0349gf340gf3409gf3049gf}
   expiration: 86400000 # 1 day
+  refresh-expiration: 1209600000 # Refresh Token: 14 days
 
 springdoc:
   swagger-ui:
