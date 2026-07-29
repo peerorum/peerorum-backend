@@ -15,12 +15,20 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.github.peerorum.peer_orum.domain.comparison.dto.ProfileDetailResponse;
+import io.github.peerorum.peer_orum.domain.spec.entity.Activity;
+import io.github.peerorum.peer_orum.domain.spec.entity.Certificate;
+import io.github.peerorum.peer_orum.domain.spec.repository.ActivityRepository;
+import io.github.peerorum.peer_orum.domain.spec.repository.CertificateRepository;
+
 @RequiredArgsConstructor
 @Service
 public class ComparisonService {
 
     private final SpecProfileRepository specProfileRepository;
     private final UserRepository userRepository;
+    private final CertificateRepository certificateRepository;
+    private final ActivityRepository activityRepository;
 
     @Transactional(readOnly = true)
     public ComparisonStatisticsResponse getComparisonStatistics(Long userId) {
@@ -80,5 +88,37 @@ public class ComparisonService {
                 .myGpaPercentile(Math.round(percentile * 100.0) / 100.0)
                 .peerProfiles(peerResponses)
                 .build();
+    }
+
+    public ProfileDetailResponse getProfileDetail(String anonymousUuid) {
+        User targetUser = userRepository.findByAnonymousUuid(anonymousUuid)
+                .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "Target user not found"));
+
+        SpecProfile targetProfile = specProfileRepository.findByUser(targetUser)
+                .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "Target profile not found"));
+
+        List<Certificate> certs = certificateRepository.findByUser(targetUser);
+        List<Activity> activities = activityRepository.findByUser(targetUser);
+
+        return ProfileDetailResponse.builder()
+                .anonymousUuid(targetUser.getAnonymousUuid())
+                .virtualNickname(targetUser.getVirtualNickname())
+                .university(targetProfile.getUniversity())
+                .major(targetProfile.getMajor())
+                .entranceYear(targetProfile.getEntranceYear())
+                .desiredJob(targetProfile.getDesiredJob())
+                .gpa(targetProfile.getGpa())
+                .toeicScore(targetProfile.getToeicScore())
+                .certificates(certs.stream().map(ProfileDetailResponse.CertificateDto::from).collect(Collectors.toList()))
+                .activities(activities.stream().map(ProfileDetailResponse.ActivityDto::from).collect(Collectors.toList()))
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SpecProfileResponse> searchPeers(String university, String major, Double minGpa, Double maxGpa) {
+        List<SpecProfile> peers = specProfileRepository.searchPeers(university, major, minGpa, maxGpa);
+        return peers.stream()
+                .map(SpecProfileResponse::from)
+                .collect(Collectors.toList());
     }
 }

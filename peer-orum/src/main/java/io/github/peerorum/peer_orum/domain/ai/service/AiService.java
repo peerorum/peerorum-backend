@@ -23,7 +23,7 @@ import java.util.Map;
 public class AiService {
 
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${gemini.api.url}")
     private String apiUrl;
