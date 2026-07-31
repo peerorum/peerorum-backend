@@ -1,6 +1,6 @@
 package io.github.peerorum.peer_orum.global.security.oauth2;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.github.peerorum.peer_orum.domain.auth.service.RefreshTokenService;
 import io.github.peerorum.peer_orum.domain.user.entity.User;
 import io.github.peerorum.peer_orum.global.security.jwt.JwtTokenProvider;
