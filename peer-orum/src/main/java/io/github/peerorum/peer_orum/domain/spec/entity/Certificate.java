@@ -35,13 +35,17 @@ public class Certificate extends BaseTimeEntity {
     @Column(nullable = false)
     private VerificationStatus status;
 
+    @Column(name = "file_url")
+    private String fileUrl;
+
     @Builder
-    public Certificate(User user, String certName, String certNo, LocalDate issueDate) {
+    public Certificate(User user, String certName, String certNo, LocalDate issueDate, String fileUrl) {
         this.user = user;
         this.certName = certName;
         this.certNo = certNo;
         this.issueDate = issueDate;
         this.status = VerificationStatus.PENDING;
+        this.fileUrl = fileUrl;
     }
 
     public void updateStatus(VerificationStatus status) {

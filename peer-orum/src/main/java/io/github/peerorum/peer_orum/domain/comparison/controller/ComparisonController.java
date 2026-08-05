@@ -34,4 +34,27 @@ public class ComparisonController {
         
         return ApiResponse.success(response);
     }
+
+    @Operation(summary = "Get specific profile detail", description = "Get detailed spec profile of an anonymous peer")
+    @GetMapping("/profiles/{anonymousUuid}")
+    public ApiResponse<io.github.peerorum.peer_orum.domain.comparison.dto.ProfileDetailResponse> getProfileDetail(
+            @org.springframework.web.bind.annotation.PathVariable String anonymousUuid) {
+        
+        io.github.peerorum.peer_orum.domain.comparison.dto.ProfileDetailResponse response = 
+                comparisonService.getProfileDetail(anonymousUuid);
+        return ApiResponse.success(response);
+    }
+
+    @Operation(summary = "Search Peers", description = "Dynamic search of peers by university, major, and GPA range")
+    @GetMapping("/search")
+    public ApiResponse<java.util.List<io.github.peerorum.peer_orum.domain.comparison.dto.SpecProfileResponse>> searchPeers(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String university,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String major,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Double minGpa,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Double maxGpa) {
+
+        java.util.List<io.github.peerorum.peer_orum.domain.comparison.dto.SpecProfileResponse> responses = 
+                comparisonService.searchPeers(university, major, minGpa, maxGpa);
+        return ApiResponse.success(responses);
+    }
 }

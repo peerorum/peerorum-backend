@@ -31,12 +31,16 @@ public class Activity extends BaseTimeEntity {
     @Column(nullable = false)
     private VerificationStatus status;
 
+    @Column(name = "file_url")
+    private String fileUrl;
+
     @Builder
-    public Activity(User user, String activityName, String authKey) {
+    public Activity(User user, String activityName, String authKey, String fileUrl) {
         this.user = user;
         this.activityName = activityName;
         this.authKey = authKey;
         this.status = VerificationStatus.PENDING;
+        this.fileUrl = fileUrl;
     }
 
     public void updateStatus(VerificationStatus status) {

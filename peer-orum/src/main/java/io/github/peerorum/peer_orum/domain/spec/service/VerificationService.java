@@ -25,7 +25,7 @@ public class VerificationService {
     private final QNetMockClient qNetMockClient;
 
     @Transactional
-    public Long requestCertificateVerification(Long userId, String certName, String certNo, LocalDate issueDate) {
+    public Long requestCertificateVerification(Long userId, String certName, String certNo, LocalDate issueDate, String fileUrl) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
 
@@ -34,6 +34,7 @@ public class VerificationService {
                 .certName(certName)
                 .certNo(certNo)
                 .issueDate(issueDate)
+                .fileUrl(fileUrl)
                 .build();
 
         boolean isValid = qNetMockClient.verifyCertificate(certName, certNo, user.getName());
@@ -48,7 +49,7 @@ public class VerificationService {
     }
 
     @Transactional
-    public Long requestActivityVerification(Long userId, String activityName, String authKey) {
+    public Long requestActivityVerification(Long userId, String activityName, String authKey, String fileUrl) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
 
@@ -56,6 +57,7 @@ public class VerificationService {
                 .user(user)
                 .activityName(activityName)
                 .authKey(authKey)
+                .fileUrl(fileUrl)
                 .build();
 
         // 대외활동 검증은 관리자 수동 검증 또는 외부 API에 의존하므로 기본적으로 PENDING 상태로 둠

@@ -58,4 +58,32 @@ public class SpecProfileCustomRepositoryImpl implements SpecProfileCustomReposit
         }
         return QSpecProfile.specProfile.desiredJob.eq(desiredJob);
     }
+
+    @Override
+    public List<SpecProfile> searchPeers(String university, String major, Double minGpa, Double maxGpa) {
+        QSpecProfile specProfile = QSpecProfile.specProfile;
+
+        return queryFactory
+                .selectFrom(specProfile)
+                .where(
+                        eqUniversity(university),
+                        eqMajor(major),
+                        gpaBetween(minGpa, maxGpa)
+                )
+                .orderBy(specProfile.gpa.desc())
+                .fetch();
+    }
+
+    private BooleanExpression gpaBetween(Double minGpa, Double maxGpa) {
+        if (minGpa == null && maxGpa == null) {
+            return null;
+        }
+        if (minGpa != null && maxGpa != null) {
+            return QSpecProfile.specProfile.gpa.between(minGpa, maxGpa);
+        }
+        if (minGpa != null) {
+            return QSpecProfile.specProfile.gpa.goe(minGpa);
+        }
+        return QSpecProfile.specProfile.gpa.loe(maxGpa);
+    }
 }
