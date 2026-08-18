@@ -95,4 +95,64 @@ public class AiService {
             throw new AiIntegrationException("Failed to parse AI response.");
         }
     }
+
+    public boolean verifyDocument(String userName, String documentType, String expectedDetails, byte[] fileBytes, String mimeType) {
+        if (fileBytes == null || fileBytes.length == 0) {
+            log.warn("Empty file bytes provided for document verification");
+            return false;
+        }
+
+        String prompt = String.format(
+            "이 이미지는 사용자의 '%s' 증빙 자료입니다. " +
+            "사용자 이름이 '%s'이고, 내용이 '%s'와 일치하는지 분석해주세요. " +
+            "정확히 일치하면 {\"verified\": true}, 아니면 {\"verified\": false}를 JSON 형식으로만 반환하세요.",
+            documentType, userName, expectedDetails
+        );
+
+        String base64Image = java.util.Base64.getEncoder().encodeToString(fileBytes);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> requestBody = Map.of(
+            "contents", List.of(
+                Map.of("parts", List.of(
+                    Map.of("text", prompt),
+                    Map.of("inlineData", Map.of(
+                        "mimeType", mimeType,
+                        "data", base64Image
+                    ))
+                ))
+            ),
+            "generationConfig", Map.of(
+                "responseMimeType", "application/json"
+            )
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+
+        try {
+            String requestUrl = apiUrl + "?key=" + apiKey;
+            ResponseEntity<Map> response = restTemplate.postForEntity(requestUrl, request, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.getBody().get("candidates");
+                if (candidates != null && !candidates.isEmpty()) {
+                    Map<String, Object> contentMap = (Map<String, Object>) candidates.get(0).get("content");
+                    List<Map<String, Object>> parts = (List<Map<String, Object>>) contentMap.get("parts");
+                    if (parts != null && !parts.isEmpty()) {
+                        String text = (String) parts.get(0).get("text");
+                        Map<String, Object> jsonMap = objectMapper.readValue(text, Map.class);
+                        Boolean verified = (Boolean) jsonMap.get("verified");
+                        return verified != null && verified;
+                    }
+                }
+            }
+            log.error("Failed to get valid response from Gemini API for document verification. Status: {}", response.getStatusCode());
+            return false;
+        } catch (Exception e) {
+            log.error("Exception occurred while calling Gemini API for document verification", e);
+            return false;
+        }
+    }
 }

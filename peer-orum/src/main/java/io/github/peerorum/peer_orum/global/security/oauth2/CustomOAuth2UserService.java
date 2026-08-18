@@ -58,7 +58,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                     .name(userInfo.getName())
                     .provider(Provider.valueOf(registrationId.toUpperCase()))
                     .providerId(userInfo.getId())
-                    .role(Role.ROLE_USER)
+                    .role(Role.ROLE_GUEST)
                     .virtualNickname(virtualNickname)
                     .build();
             userRepository.save(user);

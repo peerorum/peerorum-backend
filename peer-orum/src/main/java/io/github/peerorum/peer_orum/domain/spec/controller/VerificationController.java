@@ -43,7 +43,7 @@ public class VerificationController {
         String fileUrl = s3UploadService.uploadFile(file, "certificates");
 
         Long certId = verificationService.requestCertificateVerification(
-                user.getId(), request.getCertName(), request.getCertNo(), request.getIssueDate(), fileUrl);
+                user.getId(), request.getCertName(), request.getCertNo(), request.getIssueDate(), fileUrl, file);
         
         return ApiResponse.success("Certificate verification requested", certId);
     }
@@ -59,7 +59,7 @@ public class VerificationController {
         String fileUrl = s3UploadService.uploadFile(file, "activities");
 
         Long activityId = verificationService.requestActivityVerification(
-                user.getId(), request.getActivityName(), request.getAuthKey(), fileUrl);
+                user.getId(), request.getActivityName(), request.getAuthKey(), fileUrl, file);
         
         return ApiResponse.success("Activity verification submitted", activityId);
     }

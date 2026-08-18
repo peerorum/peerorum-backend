@@ -1,0 +1,87 @@
+@import "pretendard/dist/web/variable/pretendardvariable.css";
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, "Segoe UI", Roboto,
+    "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+
+  /* Brand blue, anchored on #015DFC (Peer Oreum primary) at the 600 step. */
+  --color-blue-50: #f0f5ff;
+  --color-blue-100: #e0ecff;
+  --color-blue-200: #bed5fe;
+  --color-blue-300: #86b2fe;
+  --color-blue-400: #4388fe;
+  --color-blue-500: #1369fe;
+  --color-blue-600: #015dfc;
+  --color-blue-700: #014cce;
+  --color-blue-800: #0741a5;
+  --color-blue-900: #0d3780;
+  --color-blue-950: #0a2450;
+
+  --color-ink-950: #0a0b10;
+  --color-ink-900: #0d0e15;
+  --color-ink-850: #12131c;
+  --color-ink-800: #171822;
+  --color-ink-700: #23242f;
+}
+
+:root {
+  color-scheme: light;
+  /* Reserve the scrollbar's width permanently so opening a modal
+     (which hides the scrollbar) never reflows the page underneath it. */
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+  color: #1f2430;
+  cursor: default;
+  font-family: var(--font-sans);
+}
+
+/* Make plain text unselectable by default, regardless of inheritance,
+   so a stray click (or caret browsing) can never park a blinking caret
+   in a heading or paragraph anywhere on the site. `cursor` is left alone
+   here (unlike user-select) because it must stay a normal *inherited*
+   value — setting it on every element individually would stop an icon
+   or label nested inside a link/button from picking up that ancestor's
+   pointer cursor. */
+body * {
+  user-select: none;
+}
+
+/* Only real text-entry fields should ever show a text caret and allow
+   a caret to be placed / text to be selected inside them. Non-text
+   input types (checkbox, radio, file, ...) are excluded — they're
+   click targets, not typing targets, so they belong in the pointer
+   group below instead. */
+body
+  :where(
+    input:not([type='checkbox']):not([type='radio']):not([type='button']):not(
+        [type='submit']
+      ):not([type='reset']):not([type='file']):not([type='range']):not([type='color']),
+    textarea,
+    [contenteditable='true']
+  ) {
+  cursor: text;
+  user-select: text;
+}
+
+/* <select> is a click-to-choose control, not typed text. A <label> that
+   wraps a checkbox/radio (the common "click anywhere on this line to
+   toggle" pattern) should read as clickable too, even over its plain
+   text portions. */
+body
+  :where(
+    button,
+    a,
+    select,
+    [role='button'],
+    input[type='checkbox'],
+    input[type='radio'],
+    label:has(input[type='checkbox']),
+    label:has(input[type='radio'])
+  ) {
+  cursor: pointer;
+}
