@@ -16,8 +16,9 @@ import {
 } from 'lucide-react'
 import MyPageLayout from '../../layouts/MyPageLayout'
 import { useAuth } from '../../context/AuthContext'
+import { api } from '../../api/axios'
 
-type FieldType = 'text' | 'number' | 'date' | 'textarea' | 'select' | 'buttongroup'
+type FieldType = 'text' | 'number' | 'date' | 'textarea' | 'select' | 'buttongroup' | 'file'
 
 interface FieldConfig {
   key: string
@@ -52,6 +53,7 @@ const CATEGORIES: CategoryConfig[] = [
       { key: 'percentile', label: '백분율 (환산)', type: 'number', placeholder: '95.3' },
       { key: 'majorAverage', label: '전공 평균 (선택)', type: 'number', placeholder: '3.85' },
       { key: 'grade', label: '이수 학년', type: 'select', options: GRADE_OPTIONS, required: true },
+      { key: 'file', label: '증명서 첨부', type: 'file' },
     ],
   },
   {
@@ -64,6 +66,7 @@ const CATEGORIES: CategoryConfig[] = [
       { key: 'test', label: '시험 종류', type: 'select', options: ['TOEIC', 'TOEIC Speaking', 'OPIc', 'TOEFL', 'IELTS'] },
       { key: 'score', label: '점수', type: 'text', required: true, placeholder: '예) 900, IH' },
       { key: 'date', label: '취득일', type: 'date' },
+      { key: 'file', label: '성적표 첨부', type: 'file' },
     ],
   },
   {
@@ -74,8 +77,10 @@ const CATEGORIES: CategoryConfig[] = [
     addLabel: '자격증 추가',
     fields: [
       { key: 'name', label: '자격증명', type: 'text', required: true, placeholder: '예) ADsP' },
+      { key: 'certNo', label: '자격번호', type: 'text', placeholder: '예) 21-02-000000' },
       { key: 'issuer', label: '발급기관', type: 'text', placeholder: '예) 한국데이터산업진흥원' },
       { key: 'date', label: '취득일', type: 'date' },
+      { key: 'file', label: '자격증명서 첨부', type: 'file' },
     ],
   },
   {
@@ -88,6 +93,7 @@ const CATEGORIES: CategoryConfig[] = [
       { key: 'name', label: '활동명', type: 'text', required: true, placeholder: '예) 마케팅 서포터즈 3기' },
       { key: 'period', label: '활동 기간', type: 'text', placeholder: '예) 2024.03 - 2024.11' },
       { key: 'detail', label: '주요 내용', type: 'textarea', placeholder: '수행한 역할과 성과를 간단히 적어주세요.' },
+      { key: 'file', label: '수료증/활동증명서 첨부', type: 'file' },
     ],
   },
   {
@@ -100,6 +106,7 @@ const CATEGORIES: CategoryConfig[] = [
       { key: 'company', label: '회사명', type: 'text', required: true, placeholder: '예) ABC 마케팅' },
       { key: 'period', label: '근무 기간', type: 'text', placeholder: '예) 2024.06 - 2024.08' },
       { key: 'detail', label: '주요 업무', type: 'textarea', placeholder: '담당했던 업무를 간단히 적어주세요.' },
+      { key: 'file', label: '수료증/경력증명서 첨부', type: 'file' },
     ],
   },
   {
@@ -112,6 +119,7 @@ const CATEGORIES: CategoryConfig[] = [
       { key: 'name', label: '수상명', type: 'text', required: true, placeholder: '예) 마케팅 아이디어 공모전 장려상' },
       { key: 'host', label: '주최기관', type: 'text', placeholder: '예) 한국마케팅협회' },
       { key: 'date', label: '수상일', type: 'date' },
+      { key: 'file', label: '상장 첨부', type: 'file' },
     ],
   },
 ]
@@ -123,7 +131,7 @@ const GUIDE_ITEMS = [
   '등록한 스펙은 안전하게 보호돼요.',
 ]
 
-type Entry = Record<string, string>
+type Entry = Record<string, any>
 
 function FieldInput({
   field,
@@ -131,8 +139,8 @@ function FieldInput({
   onChange,
 }: {
   field: FieldConfig
-  value: string
-  onChange: (value: string) => void
+  value: any
+  onChange: (value: any) => void
 }) {
   if (field.type === 'textarea') {
     return (
@@ -178,6 +186,16 @@ function FieldInput({
           </button>
         ))}
       </div>
+    )
+  }
+
+  if (field.type === 'file') {
+    return (
+      <input
+        type="file"
+        onChange={(e) => onChange(e.target.files?.[0])}
+        className="block w-full text-[13px] text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+      />
     )
   }
 
@@ -234,10 +252,53 @@ export default function SpecRegisterPage() {
     }))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (totalCompleteEntries === 0) return
-    setHasSpec(true)
-    navigate('/mypage/specs')
+
+    try {
+      // Loop through categories and upload
+      const uploadPromises: Promise<any>[] = []
+
+      CATEGORIES.forEach((category) => {
+        entries[category.key].forEach((entry) => {
+          if (!isEntryComplete(category, entry)) return
+
+          const file = entry['file'] as File | undefined
+          if (!file) return
+
+          const formData = new FormData()
+          formData.append('file', file)
+
+          // Depending on category, hit different endpoint
+          if (category.key === 'certificate' || category.key === 'language') {
+            const certName = entry['name'] || entry['test']
+            const certNo = entry['certNo'] || entry['score']
+            const reqBlob = new Blob([JSON.stringify({ certName, certNo, issueDate: entry['date'] || null })], {
+              type: 'application/json',
+            })
+            formData.append('request', reqBlob)
+            uploadPromises.push(api.post('/verification/certificate', formData))
+          } else {
+            const reqBlob = new Blob([JSON.stringify({ activityName: entry['name'] || entry['company'] || entry['host'], authKey: 'N/A' })], {
+              type: 'application/json',
+            })
+            formData.append('request', reqBlob)
+            uploadPromises.push(api.post('/verification/activity', formData))
+          }
+        })
+      })
+
+      if (uploadPromises.length > 0) {
+        await Promise.all(uploadPromises)
+        alert('증명서 검증 요청이 성공적으로 접수되었습니다!')
+      }
+
+      setHasSpec(true)
+      navigate('/mypage/specs')
+    } catch (err) {
+      console.error('Failed to submit specs', err)
+      alert('스펙 등록 중 오류가 발생했습니다.')
+    }
   }
 
   return (

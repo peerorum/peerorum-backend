@@ -29,9 +29,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         log.info("OAuth2 Login Success. Token generated.");
 
-        // For MVP, just redirect to a frontend URL with token or write to response body
-        // Here we just write to response
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"token\": \"" + token + "\", \"uuid\": \"" + user.getAnonymousUuid() + "\", \"role\": \"" + user.getRole().name() + "\"}");
+        // Redirect to frontend OAuth2 callback page
+        String redirectUrl = String.format("http://localhost:5173/oauth2/redirect?token=%s&uuid=%s&role=%s", 
+            token, user.getAnonymousUuid(), user.getRole().name());
+        response.sendRedirect(redirectUrl);
     }
 }

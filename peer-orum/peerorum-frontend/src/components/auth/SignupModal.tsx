@@ -17,6 +17,7 @@ import Modal from '../ui/Modal'
 import Stepper from '../ui/Stepper'
 import { useSignupModal } from '../../context/SignupModalContext'
 import { useAuth } from '../../context/AuthContext'
+import { api } from '../../api/axios'
 
 type Step = 'intro' | 'basic' | 'compare' | 'terms' | 'complete'
 
@@ -113,6 +114,9 @@ export default function SignupModal() {
   const navigate = useNavigate()
   const [step, setStep] = useState<Step>(initialStep)
   const [grade, setGrade] = useState('4학년')
+  const [university, setUniversity] = useState('단국대학교')
+  const [major, setMajor] = useState('')
+  const [desiredJob, setDesiredJob] = useState('')
   const [majors, setMajors] = useState<string[]>([])
   const [checked, setChecked] = useState<Record<string, boolean>>({
     service: true,
@@ -134,6 +138,29 @@ export default function SignupModal() {
   const toggleAll = () => {
     const next = !allChecked
     setChecked({ service: next, privacy: next, certification: next })
+  }
+
+  const handleComplete = async () => {
+    try {
+      // Create profile via API
+      let entranceYear = 2024
+      if (grade === '1학년') entranceYear = 2024
+      else if (grade === '2학년') entranceYear = 2023
+      else if (grade === '3학년') entranceYear = 2022
+      else if (grade === '4학년') entranceYear = 2021
+      else entranceYear = 2020
+
+      await api.post('/profiles', {
+        university,
+        major,
+        entranceYear,
+        desiredJob,
+      })
+      setStep('complete')
+    } catch (err) {
+      console.error('Failed to create profile', err)
+      alert('프로필 생성에 실패했습니다.')
+    }
   }
 
   const goToLogin = () => {
@@ -243,7 +270,8 @@ export default function SignupModal() {
               <div className="relative">
                 <select
                   required
-                  defaultValue=""
+                  value={university}
+                  onChange={(e) => setUniversity(e.target.value)}
                   className="w-full appearance-none rounded-xl border border-gray-200 px-4 py-3 text-[14px] text-ink-900 outline-none focus:border-blue-500"
                 >
                   <option value="" disabled>
@@ -262,7 +290,8 @@ export default function SignupModal() {
               <div className="relative">
                 <select
                   required
-                  defaultValue=""
+                  value={major}
+                  onChange={(e) => setMajor(e.target.value)}
                   className="w-full appearance-none rounded-xl border border-gray-200 px-4 py-3 text-[14px] text-ink-900 outline-none focus:border-blue-500"
                 >
                   <option value="" disabled>
@@ -335,7 +364,8 @@ export default function SignupModal() {
               <div className="relative">
                 <select
                   required
-                  defaultValue=""
+                  value={desiredJob}
+                  onChange={(e) => setDesiredJob(e.target.value)}
                   className="w-full appearance-none rounded-xl border border-gray-200 px-4 py-3 text-[14px] text-ink-900 outline-none focus:border-blue-500"
                 >
                   <option value="" disabled>
@@ -453,7 +483,7 @@ export default function SignupModal() {
             <button
               type="button"
               disabled={!allChecked}
-              onClick={() => setStep('complete')}
+              onClick={handleComplete}
               className="w-full rounded-xl bg-blue-600 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               다음
