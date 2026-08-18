@@ -32,6 +32,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // For MVP, just redirect to a frontend URL with token or write to response body
         // Here we just write to response
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"token\": \"" + token + "\", \"uuid\": \"" + user.getAnonymousUuid() + "\"}");
+        response.getWriter().write("{\"token\": \"" + token + "\", \"uuid\": \"" + user.getAnonymousUuid() + "\", \"role\": \"" + user.getRole().name() + "\"}");
     }
 }
