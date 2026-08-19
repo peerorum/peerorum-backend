@@ -1,7 +1,7 @@
 package io.github.peerorum.peer_orum.domain.ai.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import io.github.peerorum.peer_orum.domain.ai.dto.AiJobInfoResponse;
 import io.github.peerorum.peer_orum.global.error.AiIntegrationException;
 import lombok.RequiredArgsConstructor;
@@ -75,7 +75,9 @@ public class AiService {
             }
             log.error("Failed to get valid response from Gemini API. Status: {}", response.getStatusCode());
             throw new AiIntegrationException("Gemini API returns empty or invalid format.");
-        } catch (Exception e) {
+        } catch (AiIntegrationException e) {
+            throw e;
+        }catch (Exception e) {
             log.error("Exception occurred while calling Gemini API", e);
             throw new AiIntegrationException("Failed to process Gemini API request: " + e.getMessage());
         }
@@ -90,7 +92,7 @@ public class AiService {
                     .keyTasks((List<String>) jsonMap.get("keyTasks"))
                     .requiredCompetencies((List<String>) jsonMap.get("requiredCompetencies"))
                     .build();
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Failed to parse JSON response from AI. Content: {}", content, e);
             throw new AiIntegrationException("Failed to parse AI response.");
         }

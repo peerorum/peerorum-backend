@@ -30,7 +30,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         log.info("OAuth2 Login Success. Token generated.");
 
         // Redirect to frontend OAuth2 callback page
-        String redirectUrl = String.format("http://localhost:5173/oauth2/redirect?token=%s&uuid=%s&role=%s", 
+        String redirectUrl = String.format("http://localhost:5173/oauth2/redirect?token=%s&uuid=%s&role=%s",
             token, user.getAnonymousUuid(), user.getRole().name());
         response.sendRedirect(redirectUrl);
     }

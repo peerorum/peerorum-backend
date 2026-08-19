@@ -51,7 +51,7 @@ public class SecurityConfig {
                 )
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) // h2-console
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
-        
+
         return http.build();
     }
 

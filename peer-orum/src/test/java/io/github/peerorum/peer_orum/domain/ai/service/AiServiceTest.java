@@ -1,8 +1,9 @@
 package io.github.peerorum.peer_orum.domain.ai.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.github.peerorum.peer_orum.domain.ai.dto.AiJobInfoResponse;
 import io.github.peerorum.peer_orum.global.error.AiIntegrationException;
+import io.github.peerorum.peer_orum.global.error.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -86,6 +87,6 @@ class AiServiceTest {
         // when & then
         assertThatThrownBy(() -> aiService.getJobInfo(jobName))
                 .isInstanceOf(AiIntegrationException.class)
-                .hasMessageContaining("Gemini API returns empty or invalid format");
+                .hasMessage(ErrorCode.GEMINI_API_ERROR.getMessage());
     }
 }
