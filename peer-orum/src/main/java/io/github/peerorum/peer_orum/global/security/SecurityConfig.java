@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +21,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -38,19 +40,39 @@ public class SecurityConfig {
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .exceptionHandling(exceptionHandling ->
-                        exceptionHandling.authenticationEntryPoint(
-                                (request, response, exception) ->
-                                        response.setStatus(
-                                                HttpServletResponse.SC_UNAUTHORIZED
-                                        )
-                        )
+                        exceptionHandling
+                                .authenticationEntryPoint(
+                                        (request, response, exception) ->
+                                                response.setStatus(
+                                                        HttpServletResponse.SC_UNAUTHORIZED
+                                                )
+                                )
+                                .accessDeniedHandler(
+                                        (request, response, exception) ->
+                                                response.setStatus(
+                                                        HttpServletResponse.SC_FORBIDDEN
+                                                )
+                                )
                 )
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                                .requestMatchers(
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui.html"
+                                ).permitAll()
                                 .requestMatchers("/h2-console/**").permitAll()
-                                .requestMatchers("/api/auth/**", "/login/**", "/oauth2/**", "/api/test/**", "/api/majors/**").permitAll()
-                                .anyRequest().authenticated()
+                                .requestMatchers(
+                                        "/api/auth/**",
+                                        "/login/**",
+                                        "/oauth2/**",
+                                        "/api/test/**",
+                                        "/api/majors/**"
+                                ).permitAll()
+                                .requestMatchers("/api/admin/**")
+                                .hasRole("ADMIN")
+                                .anyRequest()
+                                .authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfoEndpointConfig ->
