@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  type ReactNode,
+} from 'react'
 import { api } from '../api/axios'
 
 interface AuthUser {
@@ -24,33 +30,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null
     }
 
+    const hasSpec = localStorage.getItem('hasSpec') === 'true'
+
     return {
       name: 'User',
-      hasSpec: true,
+      hasSpec,
     }
   })
 
-  const login: AuthContextValue['login'] = (partial) => {
-    setUser({ name: partial?.name ?? '유경', hasSpec: partial?.hasSpec ?? true })
-  }
+  const login: AuthContextValue['login'] = useCallback((partial) => {
+    const hasSpec = partial?.hasSpec ?? false
 
-  const logout = async () => {
+    localStorage.setItem('hasSpec', String(hasSpec))
+
+    setUser({
+      name: partial?.name ?? 'User',
+      hasSpec,
+    })
+  }, [])
+
+  const logout = useCallback(async () => {
     try {
       await api.post('/auth/logout')
     } finally {
       localStorage.removeItem('token')
       localStorage.removeItem('role')
       localStorage.removeItem('uuid')
+      localStorage.removeItem('hasSpec')
       setUser(null)
     }
-  }
+  }, [])
 
-  const setHasSpec = (hasSpec: boolean) => {
+  const setHasSpec = useCallback((hasSpec: boolean) => {
+    localStorage.setItem('hasSpec', String(hasSpec))
     setUser((prev) => (prev ? { ...prev, hasSpec } : prev))
-  }
+  }, [])
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: user !== null, login, logout, setHasSpec }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoggedIn: user !== null,
+        login,
+        logout,
+        setHasSpec,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
@@ -58,6 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+
+  if (!ctx) {
+    throw new Error('useAuth must be used within AuthProvider')
+  }
+
   return ctx
 }
