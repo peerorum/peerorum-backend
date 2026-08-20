@@ -10,6 +10,7 @@ import io.github.peerorum.peer_orum.domain.user.repository.UserRepository;
 import io.github.peerorum.peer_orum.global.error.CustomException;
 import io.github.peerorum.peer_orum.global.error.ErrorCode;
 import io.github.peerorum.peer_orum.domain.ai.service.AiService;
+import io.github.peerorum.peer_orum.domain.spec.dto.VerificationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class VerificationService {
     private final AiService aiService;
 
     @Transactional
-    public Long requestCertificateVerification(Long userId, String certName, String certNo, LocalDate issueDate, String fileUrl, MultipartFile file) {
+    public VerificationResponse requestCertificateVerification(Long userId, String certName, String certNo, LocalDate issueDate, String fileUrl, MultipartFile file) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
 
@@ -60,11 +61,12 @@ public class VerificationService {
             certificate.updateStatus(VerificationStatus.REJECTED);
         }
 
-        return certificateRepository.save(certificate).getId();
+        Certificate saved = certificateRepository.save(certificate);
+        return new VerificationResponse(saved.getId(), saved.getStatus());
     }
 
     @Transactional
-    public Long requestActivityVerification(Long userId, String activityName, String authKey, String fileUrl, MultipartFile file) {
+    public VerificationResponse requestActivityVerification(Long userId, String activityName, String authKey, String fileUrl, MultipartFile file) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
 
@@ -94,6 +96,54 @@ public class VerificationService {
             activity.updateStatus(VerificationStatus.REJECTED);
         }
 
-        return activityRepository.save(activity).getId();
+        Activity saved = activityRepository.save(activity);
+        return new VerificationResponse(saved.getId(), saved.getStatus());
+    }
+
+    public VerificationResponse requestGpaVerification(Long userId, Double gpa, String scoreType, Double percentile, Double majorAverage, MultipartFile file) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
+
+        boolean isValid = false;
+        if (file != null && !file.isEmpty()) {
+            try {
+                // 단국대(DK UP) 학점 증명서 포맷 기반 검증
+                StringBuilder detailsBuilder = new StringBuilder();
+                detailsBuilder.append("평균평점: ").append(gpa);
+                if (percentile != null) {
+                    detailsBuilder.append(", 환산점수: ").append(percentile);
+                }
+                if (majorAverage != null) {
+                    detailsBuilder.append(", 전공평균평점: ").append(majorAverage);
+                }
+                String expectedDetails = detailsBuilder.toString();
+                isValid = aiService.verifyDocument(user.getName(), "대학교 학점 증명(DK UP 포맷)", expectedDetails, file.getBytes(), file.getContentType());
+            } catch (Exception e) {
+                log.error("Failed to read file bytes for GPA verification", e);
+            }
+        } else {
+            log.warn("File is empty or null, cannot verify GPA via AI");
+        }
+
+        return new VerificationResponse(null, isValid ? VerificationStatus.VERIFIED : VerificationStatus.REJECTED);
+    }
+
+    public VerificationResponse requestLanguageVerification(Long userId, String testName, String score, String date, MultipartFile file) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
+
+        boolean isValid = false;
+        if (file != null && !file.isEmpty()) {
+            try {
+                String expectedDetails = "시험명: " + testName + ", 점수/등급: " + score + ", 취득일: " + (date != null ? date : "N/A");
+                isValid = aiService.verifyDocument(user.getName(), "어학 성적표", expectedDetails, file.getBytes(), file.getContentType());
+            } catch (Exception e) {
+                log.error("Failed to read file bytes for Language verification", e);
+            }
+        } else {
+            log.warn("File is empty or null, cannot verify Language via AI");
+        }
+
+        return new VerificationResponse(null, isValid ? VerificationStatus.VERIFIED : VerificationStatus.REJECTED);
     }
 }

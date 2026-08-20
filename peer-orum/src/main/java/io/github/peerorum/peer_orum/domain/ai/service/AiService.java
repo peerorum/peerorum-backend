@@ -103,10 +103,11 @@ public class AiService {
         }
 
         String prompt = String.format(
-            "이 이미지는 사용자의 '%s' 증빙 자료입니다. " +
-            "사용자 이름이 '%s'이고, 내용이 '%s'와 일치하는지 분석해주세요. " +
+            "이 이미지는 '%s' 증빙 자료입니다. " +
+            "문서 내용 중 다음 정보가 정확히 일치하는지 분석해주세요: '%s'. " +
+            "(주의: 화면 캡쳐본일 경우 이름이 안 보일 수 있으니, 이름이 안 보이더라도 위 정보만 일치하면 통과시키세요.) " +
             "정확히 일치하면 {\"verified\": true}, 아니면 {\"verified\": false}를 JSON 형식으로만 반환하세요.",
-            documentType, userName, expectedDetails
+            documentType, expectedDetails
         );
 
         String base64Image = java.util.Base64.getEncoder().encodeToString(fileBytes);
@@ -142,6 +143,7 @@ public class AiService {
                     List<Map<String, Object>> parts = (List<Map<String, Object>>) contentMap.get("parts");
                     if (parts != null && !parts.isEmpty()) {
                         String text = (String) parts.get(0).get("text");
+                        log.info("Gemini verification response: {}", text);
                         Map<String, Object> jsonMap = objectMapper.readValue(text, Map.class);
                         Boolean verified = (Boolean) jsonMap.get("verified");
                         return verified != null && verified;
