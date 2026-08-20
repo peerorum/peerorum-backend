@@ -36,5 +36,7 @@ public class ProfileService {
                 .build();
 
         specProfileRepository.save(newProfile);
+        
+        user.updateRole(io.github.peerorum.peer_orum.domain.user.entity.Role.ROLE_USER);
     }
 }

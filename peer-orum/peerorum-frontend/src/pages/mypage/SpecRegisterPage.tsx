@@ -190,12 +190,31 @@ function FieldInput({
   }
 
   if (field.type === 'file') {
+    const file = value as File | undefined
     return (
-      <input
-        type="file"
-        onChange={(e) => onChange(e.target.files?.[0])}
-        className="block w-full text-[13px] text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
-      />
+      <div className="flex w-full items-center">
+        {!file ? (
+          <label className="flex w-full cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-[12px] font-medium text-gray-600 transition-colors hover:bg-gray-50">
+            <span>파일 선택</span>
+            <input
+              type="file"
+              className="hidden"
+              onChange={(e) => onChange(e.target.files?.[0])}
+            />
+          </label>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onChange(undefined)}
+            className="group flex w-full items-center justify-center rounded-lg bg-blue-50 px-3 py-2 text-[12px] font-bold text-blue-600 transition-colors hover:bg-red-50 hover:text-red-600"
+          >
+            <span className="block group-hover:hidden">선택완료</span>
+            <span className="hidden items-center gap-1 group-hover:flex">
+              <X className="h-3.5 w-3.5" /> 삭제하기
+            </span>
+          </button>
+        )}
+      </div>
     )
   }
 
@@ -217,7 +236,6 @@ export default function SpecRegisterPage() {
   const [entries, setEntries] = useState<Record<string, Entry[]>>(() =>
     Object.fromEntries(CATEGORIES.map((c) => [c.key, []])),
   )
-  const [verified, setVerified] = useState<Record<string, boolean>>({})
 
   const isEntryComplete = (category: CategoryConfig, entry: Entry) =>
     category.fields
@@ -252,6 +270,74 @@ export default function SpecRegisterPage() {
     }))
   }
 
+  const setVerificationStatus = (categoryKey: string, index: number, status: 'NONE' | 'LOADING' | 'VERIFIED' | 'REJECTED') => {
+    setEntries((prev) => ({
+      ...prev,
+      [categoryKey]: prev[categoryKey].map((entry, i) =>
+        i === index ? { ...entry, _verificationStatus: status } : entry,
+      ),
+    }))
+  }
+
+  const handleVerifyEntry = async (category: CategoryConfig, entry: Entry, index: number) => {
+    if (!isEntryComplete(category, entry)) return
+    
+    const file = entry['file'] as File | undefined
+    if (!file) {
+      alert('증빙 이미지를 첨부해주세요.')
+      return
+    }
+
+    setVerificationStatus(category.key, index, 'LOADING')
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      let res
+      if (category.key === 'certificate') {
+        const certName = entry['name']
+        const certNo = entry['certNo']
+        const reqBlob = new Blob([JSON.stringify({ certName, certNo, issueDate: entry['date'] || null })], { type: 'application/json' })
+        formData.append('request', reqBlob)
+        res = await api.post('/verification/certificate', formData)
+      } else if (category.key === 'activity') {
+        const reqBlob = new Blob([JSON.stringify({ activityName: entry['name'], authKey: 'N/A' })], { type: 'application/json' })
+        formData.append('request', reqBlob)
+        res = await api.post('/verification/activity', formData)
+      } else if (category.key === 'gpa') {
+        const reqBlob = new Blob([JSON.stringify({ 
+          gpa: Number(entry['gpa']), 
+          scoreType: entry['scoreType'] || '4.5 만점', 
+          percentile: entry['percentile'] ? Number(entry['percentile']) : null,
+          majorAverage: entry['majorAverage'] ? Number(entry['majorAverage']) : null
+        })], { type: 'application/json' })
+        formData.append('request', reqBlob)
+        res = await api.post('/verification/gpa', formData)
+      } else if (category.key === 'language') {
+        const reqBlob = new Blob([JSON.stringify({ 
+          testName: entry['test'] || 'TOEIC', 
+          score: entry['score'], 
+          date: entry['date'] || null 
+        })], { type: 'application/json' })
+        formData.append('request', reqBlob)
+        res = await api.post('/verification/language', formData)
+      }
+
+      if (res?.data?.data?.status === 'VERIFIED') {
+        setVerificationStatus(category.key, index, 'VERIFIED')
+      } else {
+        setVerificationStatus(category.key, index, 'REJECTED')
+        alert('인증 실패: 이미지 속 정보가 일치하지 않거나 글씨를 인식할 수 없습니다.')
+        setVerificationStatus(category.key, index, 'NONE')
+      }
+    } catch (err) {
+      console.error('Verification failed', err)
+      alert('인증 처리 중 서버 오류가 발생했습니다.')
+      setVerificationStatus(category.key, index, 'NONE')
+    }
+  }
+
   const handleSubmit = async () => {
     if (totalCompleteEntries === 0) return
 
@@ -262,6 +348,7 @@ export default function SpecRegisterPage() {
       CATEGORIES.forEach((category) => {
         entries[category.key].forEach((entry) => {
           if (!isEntryComplete(category, entry)) return
+          if (entry._verificationStatus === 'VERIFIED') return
 
           const file = entry['file'] as File | undefined
           if (!file) return
@@ -348,7 +435,6 @@ export default function SpecRegisterPage() {
           {CATEGORIES.map((category) => {
             const rowFields = category.fields.filter((f) => f.type !== 'textarea')
             const textareaFields = category.fields.filter((f) => f.type === 'textarea')
-            const isVerified = verified[category.key] ?? false
 
             return (
               <div
@@ -362,22 +448,6 @@ export default function SpecRegisterPage() {
                     </span>
                     <h3 className="text-[14.5px] font-bold text-ink-900">{category.title}</h3>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setVerified((prev) => ({ ...prev, [category.key]: !isVerified }))}
-                    className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
-                      isVerified
-                        ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
-                        : 'border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100'
-                    }`}
-                  >
-                    {isVerified ? (
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                    ) : (
-                      <ShieldCheck className="h-3.5 w-3.5" />
-                    )}
-                    {isVerified ? '인증됨' : '인증하기'}
-                  </button>
                 </div>
                 <p className="text-[12.5px] text-gray-400">{category.description}</p>
 
@@ -388,26 +458,50 @@ export default function SpecRegisterPage() {
                         key={index}
                         className={index > 0 ? 'border-t border-gray-100 pt-4' : ''}
                       >
-                        {entries[category.key].length > 1 && (
-                          <div className="mb-2 flex items-center justify-between">
-                            <span className="flex items-center gap-2 text-[12px] font-semibold text-gray-400">
-                              {category.title.replace(' 입력', '')} {index + 1}
-                              {!isEntryComplete(category, entry) && (
-                                <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10.5px] font-semibold text-amber-600">
-                                  필수 항목을 입력해주세요
-                                </span>
-                              )}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => removeEntry(category.key, index)}
-                              aria-label="삭제"
-                              className="text-gray-300 hover:text-red-500"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="flex items-center gap-2 text-[13px] font-bold text-ink-900">
+                            {category.title.replace(' 입력', '')} {index + 1}
+                            {!isEntryComplete(category, entry) && (
+                              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10.5px] font-semibold text-amber-600">
+                                필수 항목을 입력해주세요
+                              </span>
+                            )}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {(category.key === 'certificate' || category.key === 'activity' || category.key === 'gpa' || category.key === 'language') && (
+                              <button
+                                type="button"
+                                onClick={() => handleVerifyEntry(category, entry, index)}
+                                disabled={entry._verificationStatus === 'LOADING' || !isEntryComplete(category, entry)}
+                                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                  entry._verificationStatus === 'VERIFIED'
+                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
+                                    : entry._verificationStatus === 'LOADING'
+                                    ? 'border-gray-200 bg-gray-50 text-gray-400'
+                                    : 'border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                }`}
+                              >
+                                {entry._verificationStatus === 'VERIFIED' ? (
+                                  <><CheckCircle2 className="h-3.5 w-3.5" /> 인증 완료</>
+                                ) : entry._verificationStatus === 'LOADING' ? (
+                                  'AI 분석 중...'
+                                ) : (
+                                  <><ShieldCheck className="h-3.5 w-3.5" /> AI 인증하기</>
+                                )}
+                              </button>
+                            )}
+                            {entries[category.key].length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeEntry(category.key, index)}
+                                aria-label="삭제"
+                                className="text-gray-300 hover:text-red-500"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
                           </div>
-                        )}
+                        </div>
 
                         <div
                           className="grid gap-3"

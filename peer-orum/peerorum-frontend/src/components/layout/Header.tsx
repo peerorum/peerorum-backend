@@ -77,17 +77,31 @@ export default function Header() {
                 ? activeSection === sectionId
                 : location.pathname === item.href
 
+            if (sectionId) {
+              return (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleSectionClick(e, item.href)}
+                  className={`text-[15px] font-medium transition-colors ${
+                    isActive ? 'text-blue-600' : 'text-gray-600 hover:text-ink-900'
+                  }`}
+                >
+                  {item.label}
+                </a>
+              )
+            }
+
             return (
-              <a
+              <Link
                 key={item.label}
-                href={item.href}
-                onClick={sectionId ? (e) => handleSectionClick(e, item.href) : undefined}
+                to={item.href}
                 className={`text-[15px] font-medium transition-colors ${
                   isActive ? 'text-blue-600' : 'text-gray-600 hover:text-ink-900'
                 }`}
               >
                 {item.label}
-              </a>
+              </Link>
             )
           })}
         </nav>

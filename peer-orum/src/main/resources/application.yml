@@ -23,6 +23,11 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
     defer-datasource-initialization: true
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
   # OAuth2 configuration (Placeholder for KAKAO, GOOGLE)
   security:
     oauth2:
@@ -74,5 +79,5 @@ springdoc:
 
 gemini:
   api:
-    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
+    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent
     key: ${GEMINI_API_KEY:mock_key}

@@ -2,6 +2,7 @@ package io.github.peerorum.peer_orum.domain.spec.controller;
 
 import io.github.peerorum.peer_orum.domain.spec.dto.ActivityVerificationRequest;
 import io.github.peerorum.peer_orum.domain.spec.dto.CertificateVerificationRequest;
+import io.github.peerorum.peer_orum.domain.spec.dto.VerificationResponse;
 import io.github.peerorum.peer_orum.domain.spec.service.VerificationService;
 import io.github.peerorum.peer_orum.domain.user.entity.User;
 import io.github.peerorum.peer_orum.domain.user.repository.UserRepository;
@@ -13,7 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,7 +35,7 @@ public class VerificationController {
 
     @Operation(summary = "Verify Certificate (Q-Net)", description = "Verify external certificate using Q-Net Mock API and upload proof")
     @PostMapping(value = "/certificate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<Long> verifyCertificate(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
+    public ApiResponse<VerificationResponse> verifyCertificate(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
                                                @RequestPart("request") CertificateVerificationRequest request,
                                                @RequestPart(value = "file", required = false) MultipartFile file) {
         User user = userRepository.findByEmail(principal.getUsername())
@@ -42,15 +43,15 @@ public class VerificationController {
         
         String fileUrl = s3UploadService.uploadFile(file, "certificates");
 
-        Long certId = verificationService.requestCertificateVerification(
+        VerificationResponse response = verificationService.requestCertificateVerification(
                 user.getId(), request.getCertName(), request.getCertNo(), request.getIssueDate(), fileUrl, file);
         
-        return ApiResponse.success("Certificate verification requested", certId);
+        return ApiResponse.success("Certificate verification requested", response);
     }
 
     @Operation(summary = "Verify Activity", description = "Submit activity auth key and proof file for verification")
     @PostMapping(value = "/activity", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<Long> verifyActivity(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
+    public ApiResponse<VerificationResponse> verifyActivity(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
                                             @RequestPart("request") ActivityVerificationRequest request,
                                             @RequestPart(value = "file", required = false) MultipartFile file) {
         User user = userRepository.findByEmail(principal.getUsername())
@@ -58,9 +59,37 @@ public class VerificationController {
         
         String fileUrl = s3UploadService.uploadFile(file, "activities");
 
-        Long activityId = verificationService.requestActivityVerification(
+        VerificationResponse response = verificationService.requestActivityVerification(
                 user.getId(), request.getActivityName(), request.getAuthKey(), fileUrl, file);
         
-        return ApiResponse.success("Activity verification submitted", activityId);
+        return ApiResponse.success("Activity verification submitted", response);
+    }
+
+    @Operation(summary = "Verify GPA", description = "Verify GPA via AI OCR")
+    @PostMapping(value = "/gpa", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<VerificationResponse> verifyGpa(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
+                                            @RequestPart("request") io.github.peerorum.peer_orum.domain.spec.dto.GpaVerificationRequest request,
+                                            @RequestPart(value = "file", required = false) MultipartFile file) {
+        User user = userRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
+        
+        VerificationResponse response = verificationService.requestGpaVerification(
+                user.getId(), request.getGpa(), request.getScoreType(), request.getPercentile(), request.getMajorAverage(), file);
+        
+        return ApiResponse.success("GPA verification completed", response);
+    }
+
+    @Operation(summary = "Verify Language", description = "Verify Language score via AI OCR")
+    @PostMapping(value = "/language", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<VerificationResponse> verifyLanguage(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
+                                            @RequestPart("request") io.github.peerorum.peer_orum.domain.spec.dto.LanguageVerificationRequest request,
+                                            @RequestPart(value = "file", required = false) MultipartFile file) {
+        User user = userRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
+        
+        VerificationResponse response = verificationService.requestLanguageVerification(
+                user.getId(), request.getTestName(), request.getScore(), request.getDate(), file);
+        
+        return ApiResponse.success("Language verification completed", response);
     }
 }
