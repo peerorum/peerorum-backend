@@ -1,7 +1,11 @@
 package io.github.peerorum.peer_orum.domain.auth.controller;
 
+import io.github.peerorum.peer_orum.domain.auth.dto.TokenReissueResult;
+import io.github.peerorum.peer_orum.global.security.jwt.JwtTokenProvider;
+import io.github.peerorum.peer_orum.global.security.jwt.RefreshTokenCookieManager;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.bind.annotation.CookieValue;
 import io.github.peerorum.peer_orum.domain.auth.dto.EmailVerificationRequest;
-import io.github.peerorum.peer_orum.domain.auth.dto.RefreshTokenRequest;
 import io.github.peerorum.peer_orum.domain.auth.dto.TokenReissueResponse;
 import io.github.peerorum.peer_orum.domain.auth.dto.TokenVerificationRequest;
 import io.github.peerorum.peer_orum.domain.auth.service.EmailVerificationService;
@@ -32,6 +36,8 @@ public class AuthController {
     private final EmailVerificationService emailVerificationService;
     private final RefreshTokenService refreshTokenService;
     private final UserRepository userRepository;
+    private final RefreshTokenCookieManager refreshTokenCookieManager;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(
             summary = "Send School Email Verification",
@@ -97,16 +103,35 @@ public class AuthController {
     )
     @PostMapping("/refresh")
     public ApiResponse<TokenReissueResponse> refresh(
-            @RequestBody RefreshTokenRequest request
+            @CookieValue(
+                    name = RefreshTokenCookieManager.COOKIE_NAME,
+                    required = false
+            )
+            String refreshToken,
+            HttpServletResponse servletResponse
     ) {
-        TokenReissueResponse response =
+        TokenReissueResult result =
                 refreshTokenService.reissueTokens(
-                        request.refreshToken()
+                        refreshToken
+                );
+
+        refreshTokenCookieManager.addRefreshTokenCookie(
+                servletResponse,
+                result.refreshToken(),
+                jwtTokenProvider.getExpirationFromToken(
+                        result.refreshToken()
+                )
+        );
+
+        TokenReissueResponse responseBody =
+                new TokenReissueResponse(
+                        result.accessToken(),
+                        result.uuid()
                 );
 
         return ApiResponse.success(
                 "Tokens reissued successfully",
-                response
+                responseBody
         );
     }
 
@@ -116,11 +141,20 @@ public class AuthController {
     )
     @PostMapping("/logout")
     public ApiResponse<Void> logout(
-            @RequestBody RefreshTokenRequest request
+            @CookieValue(
+                    name = RefreshTokenCookieManager.COOKIE_NAME,
+                    required = false
+            )
+            String refreshToken,
+            HttpServletResponse servletResponse
     ) {
-        refreshTokenService.logout(
-                request.refreshToken()
-        );
+        try {
+            refreshTokenService.logout(refreshToken);
+        } finally {
+            refreshTokenCookieManager.deleteRefreshTokenCookie(
+                    servletResponse
+            );
+        }
 
         return ApiResponse.success(
                 "Logged out successfully",

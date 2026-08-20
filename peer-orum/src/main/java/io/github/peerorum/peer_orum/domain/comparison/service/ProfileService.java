@@ -1,5 +1,6 @@
 package io.github.peerorum.peer_orum.domain.comparison.service;
 
+import io.github.peerorum.peer_orum.domain.user.entity.Role;
 import io.github.peerorum.peer_orum.domain.comparison.dto.ProfileCreateRequest;
 import io.github.peerorum.peer_orum.domain.spec.entity.SpecProfile;
 import io.github.peerorum.peer_orum.domain.spec.repository.SpecProfileRepository;
@@ -24,7 +25,8 @@ public class ProfileService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
 
         if (specProfileRepository.findByUser(user).isPresent()) {
-            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "Profile already exists");
+            user.updateRole(Role.ROLE_USER);
+            return;
         }
 
         SpecProfile newProfile = SpecProfile.builder()
@@ -36,5 +38,6 @@ public class ProfileService {
                 .build();
 
         specProfileRepository.save(newProfile);
+        user.updateRole(Role.ROLE_USER);
     }
 }

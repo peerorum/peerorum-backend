@@ -45,8 +45,10 @@ spring:
               - profile_nickname
               - account_email
         provider:
+          google:
+            authorization-uri: "https://accounts.google.com/o/oauth2/v2/auth?prompt=select_account"
           kakao:
-            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            authorization-uri: "https://kauth.kakao.com/oauth/authorize?prompt=login"
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id

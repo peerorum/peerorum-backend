@@ -1,6 +1,6 @@
 package io.github.peerorum.peer_orum.domain.auth.service;
 
-import io.github.peerorum.peer_orum.domain.auth.dto.TokenReissueResponse;
+import io.github.peerorum.peer_orum.domain.auth.dto.TokenReissueResult;
 import io.github.peerorum.peer_orum.domain.auth.entity.RefreshToken;
 import io.github.peerorum.peer_orum.domain.auth.repository.RefreshTokenRepository;
 import io.github.peerorum.peer_orum.domain.user.entity.User;
@@ -49,7 +49,7 @@ public class RefreshTokenService {
     }
 
     @Transactional
-    public TokenReissueResponse reissueTokens(
+    public TokenReissueResult reissueTokens(
             String requestedRefreshToken
     ) {
         if (requestedRefreshToken == null
@@ -108,7 +108,7 @@ public class RefreshTokenService {
         String newRefreshToken =
                 issueRefreshToken(user);
 
-        return new TokenReissueResponse(
+        return new TokenReissueResult(
                 newAccessToken,
                 newRefreshToken,
                 user.getAnonymousUuid()

@@ -1,12 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../layouts/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
-import { useSignupModal } from '../../context/SignupModalContext'
 
 export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const { open: openSignupModal } = useSignupModal()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

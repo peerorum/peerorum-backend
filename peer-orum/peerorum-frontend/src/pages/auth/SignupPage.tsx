@@ -74,22 +74,32 @@ export default function SignupPage() {
         <div className="flex flex-col gap-2.5">
           <button
             type="button"
-            onClick={() => openSignupModal('basic')}
+            onClick={() => {
+              window.location.href =
+                'http://localhost:8080/oauth2/authorization/google'
+            }}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-[14px] font-medium text-ink-900 hover:bg-gray-50"
           >
             <span className="text-[15px] font-bold text-[#4285F4]">G</span>
             Google로 가입하기
           </button>
+
           <button
             type="button"
-            onClick={() => openSignupModal('basic')}
+            onClick={() => {
+              window.location.href =
+                'http://localhost:8080/oauth2/authorization/kakao'
+            }}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-[#FEE500] py-3 text-[14px] font-medium text-[#191600] hover:brightness-95"
           >
             카카오로 가입하기
           </button>
+
           <button
             type="button"
-            onClick={() => openSignupModal('basic')}
+            onClick={() => {
+              alert('Apple 회원가입은 준비 중입니다.')
+            }}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-[14px] font-medium text-ink-900 hover:bg-gray-50"
           >
             Apple로 가입하기
