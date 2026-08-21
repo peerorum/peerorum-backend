@@ -9,4 +9,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     Optional<User> findByAnonymousUuid(String anonymousUuid);
     boolean existsByVirtualNickname(String virtualNickname);
+    long countByCreatedAtAfter(java.time.LocalDateTime date);
+    java.util.List<User> findTop5ByOrderByCreatedAtDesc();
 }

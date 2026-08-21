@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Award,
@@ -19,21 +19,8 @@ import MyPageLayout from '../../layouts/MyPageLayout'
 import PenguinMascot from '../../components/ui/PenguinMascot'
 import PenguinHero from '../../components/ui/PenguinHero'
 import { useAuth } from '../../context/AuthContext'
-
-const PROFILE_FIELDS = [
-  { icon: Building2, label: '학교', value: '단국대학교' },
-  { icon: FileText, label: '학과', value: '경영학과' },
-  { icon: GraduationCap, label: '학년', value: '4학년' },
-  { icon: Target, label: '희망 직무', value: '마케팅' },
-  { icon: Award, label: '학점', value: '4.29 / 4.5' },
-]
-
-const SUMMARY = [
-  { label: '총 등록 항목 수', value: 12, icon: FileText, tone: 'bg-blue-50 text-blue-600' },
-  { label: '인증 완료', value: 9, icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600' },
-  { label: '인증 대기', value: 2, icon: Clock, tone: 'bg-amber-50 text-amber-600' },
-  { label: '인증 반려', value: 1, icon: MinusCircle, tone: 'bg-gray-100 text-gray-500' },
-]
+import { fetchMyProfile } from '../../api/profile'
+import type { MyProfileData } from '../../api/profile'
 
 const TABS = ['전체', '인증 완료', '인증 대기', '인증 반려']
 
@@ -43,42 +30,35 @@ const STATUS_STYLE: Record<string, string> = {
   반려: 'bg-red-50 text-red-600',
 }
 
-const ITEMS = [
-  { icon: GraduationCap, item: '학점', content: '4.29 / 4.5', status: '완료', date: '2024.08.15' },
-  { icon: Users, item: '어학 (TOEIC)', content: 'TOEIC 780', status: '완료', date: '2024.08.10' },
-  { icon: Award, item: '자격증 (ADsP)', content: 'ADsP', status: '완료', date: '2024.08.12' },
-  {
-    icon: Briefcase,
-    item: '대외활동',
-    content: '교내 마케팅 서포터즈 3기',
-    status: '대기',
-    date: '2024.08.18',
-  },
-  {
-    icon: Users,
-    item: '인턴 경험',
-    content: 'ABC 마케팅 인턴 (3개월)',
-    status: '대기',
-    date: '2024.08.18',
-  },
-  {
-    icon: Award,
-    item: '수상',
-    content: '마케팅 아이디어 공모전 장려상',
-    status: '반려',
-    date: '2024.08.14',
-  },
-]
-
 export default function VerificationStatusPage() {
   const [activeTab, setActiveTab] = useState('전체')
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [profile, setProfile] = useState<MyProfileData | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const filtered =
-    activeTab === '전체' ? ITEMS : ITEMS.filter((item) => `인증 ${item.status}` === activeTab)
+  useEffect(() => {
+    if (user?.hasSpec) {
+      fetchMyProfile()
+        .then(setProfile)
+        .catch(console.error)
+        .finally(() => setLoading(false))
+    } else {
+      setLoading(false)
+    }
+  }, [user?.hasSpec])
 
-  if (!user?.hasSpec) {
+  if (loading) {
+    return (
+      <MyPageLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500">데이터를 불러오는 중입니다...</p>
+        </div>
+      </MyPageLayout>
+    )
+  }
+
+  if (!user?.hasSpec || !profile) {
     return (
       <MyPageLayout>
         <div>
@@ -106,6 +86,58 @@ export default function VerificationStatusPage() {
     )
   }
 
+  const PROFILE_FIELDS = [
+    { icon: Building2, label: '학교', value: profile.university || '-' },
+    { icon: FileText, label: '학과', value: profile.major || '-' },
+    { icon: GraduationCap, label: '학번', value: profile.entranceYear ? `${profile.entranceYear}학번` : '-' },
+    { icon: Target, label: '희망 직무', value: profile.desiredJob || '-' },
+    { icon: Award, label: '학점', value: profile.gpa ? `${profile.gpa} / 4.5` : '-' },
+  ]
+
+  const items: any[] = []
+  if (profile.gpa) {
+    items.push({ icon: GraduationCap, item: '학점', content: `${profile.gpa} / 4.5`, status: '완료', date: '-' })
+  }
+  if (profile.toeicScore) {
+    items.push({ icon: Users, item: '어학 (TOEIC)', content: `TOEIC ${profile.toeicScore}`, status: '완료', date: '-' })
+  }
+  if (profile.opicGrade) {
+    items.push({ icon: Users, item: '어학 (OPIc)', content: `OPIc ${profile.opicGrade}`, status: '완료', date: '-' })
+  }
+  if (profile.toeicSpeakingGrade) {
+    items.push({ icon: Users, item: '어학 (TOEIC Speaking)', content: `TOEIC Speaking ${profile.toeicSpeakingGrade}`, status: '완료', date: '-' })
+  }
+  
+  profile.certificates?.forEach(cert => {
+    let st = '대기'
+    if (cert.status === 'VERIFIED') st = '완료'
+    if (cert.status === 'REJECTED') st = '반려'
+    items.push({ icon: Award, item: `자격증 (${cert.certName})`, content: cert.certName, status: st, date: cert.issueDate || '-' })
+  })
+
+  profile.activities?.forEach(act => {
+    let st = '대기'
+    if (act.status === 'VERIFIED') st = '완료'
+    if (act.status === 'REJECTED') st = '반려'
+    items.push({ icon: Briefcase, item: '대외활동', content: act.activityName, status: st, date: '-' })
+  })
+
+  const total = items.length
+  const completed = items.filter(i => i.status === '완료').length
+  const pending = items.filter(i => i.status === '대기').length
+  const rejected = items.filter(i => i.status === '반려').length
+
+  const SUMMARY = [
+    { label: '총 등록 항목 수', value: total, icon: FileText, tone: 'bg-blue-50 text-blue-600' },
+    { label: '인증 완료', value: completed, icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600' },
+    { label: '인증 대기', value: pending, icon: Clock, tone: 'bg-amber-50 text-amber-600' },
+    { label: '인증 반려', value: rejected, icon: MinusCircle, tone: 'bg-gray-100 text-gray-500' },
+  ]
+
+  const filtered =
+    activeTab === '전체' ? items : items.filter((item) => `인증 ${item.status}` === activeTab)
+
+
   return (
     <MyPageLayout>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -126,9 +158,8 @@ export default function VerificationStatusPage() {
           <div className="flex items-center gap-4">
             <PenguinMascot className="h-14 w-14" />
             <div>
-              <span className="text-[16px] font-bold text-ink-900">유경</span>
-              <p className="mt-0.5 text-[13px] text-gray-500">단국대학교 경영학과 4학년</p>
-              <p className="text-[12.5px] text-gray-400">marketing@dankook.ac.kr</p>
+              <span className="text-[16px] font-bold text-ink-900">{profile.name}</span>
+              <p className="mt-0.5 text-[13px] text-gray-500">{profile.university} {profile.major} {profile.entranceYear ? `${profile.entranceYear}학번` : ''}</p>
             </div>
           </div>
           <button className="flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 px-3.5 py-2 text-[13px] font-medium text-ink-900 hover:bg-gray-50">
@@ -201,8 +232,8 @@ export default function VerificationStatusPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((row) => (
-              <tr key={row.item} className="border-b border-gray-50 last:border-none">
+            {filtered.map((row, idx) => (
+              <tr key={idx} className="border-b border-gray-50 last:border-none">
                 <td className="px-5 py-4">
                   <span className="flex items-center gap-2 text-[13.5px] font-medium text-ink-900">
                     <row.icon className="h-4 w-4 text-gray-400" />

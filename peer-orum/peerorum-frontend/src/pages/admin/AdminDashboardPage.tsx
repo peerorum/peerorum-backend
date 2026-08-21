@@ -1,10 +1,12 @@
+import { useEffect, useState } from 'react'
 import { ClipboardList, Flag, UserPlus, Users } from 'lucide-react'
 import AdminLayout from '../../layouts/AdminLayout'
 import StatTile from '../../components/admin/StatTile'
 import SignupTrendChart from '../../components/admin/SignupTrendChart'
 import GenderDonutChart from '../../components/admin/GenderDonutChart'
 import PenguinHero from '../../components/ui/PenguinHero'
-import { GENDER_DISTRIBUTION, RECENT_REPORTS, RECENT_SIGNUPS, SIGNUP_TREND } from '../../data/mockAdmin'
+import { GENDER_DISTRIBUTION, RECENT_REPORTS, SIGNUP_TREND } from '../../data/mockAdmin'
+import { fetchAdminDashboard, type AdminDashboardData } from '../../api/admin'
 
 const REPORT_STATUS_STYLE: Record<string, string> = {
   '처리 대기': 'bg-rose-50 text-rose-600',
@@ -14,6 +16,11 @@ const REPORT_STATUS_STYLE: Record<string, string> = {
 
 export default function AdminDashboardPage() {
   const totalGender = GENDER_DISTRIBUTION.reduce((sum, item) => sum + item.value, 0)
+  const [data, setData] = useState<AdminDashboardData | null>(null)
+
+  useEffect(() => {
+    fetchAdminDashboard().then(setData).catch(console.error)
+  }, [])
 
   return (
     <AdminLayout>
@@ -32,29 +39,29 @@ export default function AdminDashboardPage() {
           icon={Users}
           iconClassName="bg-blue-50 text-blue-600"
           label="전체 사용자"
-          value="2,543명"
-          delta={{ direction: 'up', text: '128 (전일 대비)' }}
+          value={data ? `${data.totalUsers.toLocaleString()}명` : '...'}
+          delta={{ direction: 'up', text: '전체' }}
         />
         <StatTile
           icon={UserPlus}
           iconClassName="bg-emerald-50 text-emerald-600"
           label="신규 가입자"
-          value="198명"
-          delta={{ direction: 'up', text: '23 (전일 대비)' }}
+          value={data ? `${data.newSignups.toLocaleString()}명` : '...'}
+          delta={{ direction: 'up', text: '금일 기준' }}
         />
         <StatTile
           icon={ClipboardList}
           iconClassName="bg-violet-50 text-violet-600"
           label="등록 스펙 카드"
-          value="1,842건"
-          delta={{ direction: 'up', text: '156 (전일 대비)' }}
+          value={data ? `${data.totalSpecCards.toLocaleString()}건` : '...'}
+          delta={{ direction: 'up', text: '전체' }}
         />
         <StatTile
           icon={Flag}
           iconClassName="bg-orange-50 text-orange-600"
           label="신고 처리 건수"
-          value="32건"
-          delta={{ direction: 'down', text: '5 (전일 대비)' }}
+          value={data ? `${data.reportCount.toLocaleString()}건` : '...'}
+          delta={{ direction: 'down', text: '처리 중' }}
         />
       </div>
 
@@ -78,10 +85,10 @@ export default function AdminDashboardPage() {
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm shadow-black/[0.02]">
           <div className="flex items-center justify-between">
             <p className="text-[14.5px] font-bold text-ink-900">최근 가입 사용자</p>
-            <span className="text-[12.5px] font-medium text-blue-600">전체 보기</span>
+            <span className="text-[12.5px] font-medium text-blue-600 cursor-pointer hover:underline">전체 보기</span>
           </div>
           <ul className="mt-4 flex flex-col gap-3.5">
-            {RECENT_SIGNUPS.map((signup) => (
+            {data?.recentSignups.map((signup) => (
               <li key={signup.handle} className="flex items-center justify-between text-[13.5px]">
                 <span className="flex items-center gap-2.5">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-[12px] font-bold text-gray-500">
@@ -100,6 +107,7 @@ export default function AdminDashboardPage() {
                 </span>
               </li>
             ))}
+            {!data && <li className="text-[13px] text-gray-400 py-2">로딩 중...</li>}
           </ul>
         </div>
 
