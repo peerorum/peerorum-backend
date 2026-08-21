@@ -2,16 +2,80 @@ import axios from 'axios'
 
 export const api = axios.create({
   baseURL: 'http://localhost:8080/api',
+  withCredentials: true,
 })
 
-// Request Interceptor: Attach token if it exists
+// 모든 API 요청에 Access Token 첨부
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+  const accessToken = localStorage.getItem('token')
+
+  if (accessToken) {
+    config.headers.Authorization =
+      `Bearer ${accessToken}`
   }
+
   return config
 })
+
+// Response Interceptor: 만료된 Access Token 재발급
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config
+
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true
+
+      try {
+        const refreshResponse = await axios.post(
+          'http://localhost:8080/api/auth/refresh',
+          null,
+          {
+            withCredentials: true,
+          },
+        )
+
+        const newAccessToken =
+          refreshResponse.data?.data?.accessToken
+
+        const uuid =
+          refreshResponse.data?.data?.uuid
+
+        if (!newAccessToken) {
+          throw new Error('새 Access Token이 없습니다.')
+        }
+
+        localStorage.setItem(
+          'token',
+          newAccessToken,
+        )
+
+        if (uuid) {
+          localStorage.setItem('uuid', uuid)
+        }
+
+        originalRequest.headers.Authorization =
+          `Bearer ${newAccessToken}`
+
+        return api(originalRequest)
+      } catch (refreshError) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('role')
+        localStorage.removeItem('uuid')
+
+        window.location.href = '/login'
+
+        return Promise.reject(refreshError)
+      }
+    }
+
+    return Promise.reject(error)
+  },
+)
 
 // Response Interceptor: Handle 401 Unauthorized
 api.interceptors.response.use(

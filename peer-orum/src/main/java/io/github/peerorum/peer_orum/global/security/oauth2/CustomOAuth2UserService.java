@@ -1,5 +1,6 @@
 package io.github.peerorum.peer_orum.global.security.oauth2;
 
+import io.github.peerorum.peer_orum.domain.spec.repository.SpecProfileRepository;
 import io.github.peerorum.peer_orum.domain.user.entity.Provider;
 import io.github.peerorum.peer_orum.domain.user.entity.Role;
 import io.github.peerorum.peer_orum.domain.user.entity.User;
@@ -27,6 +28,7 @@ import java.util.UUID;
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private final UserRepository userRepository;
+    private final SpecProfileRepository specProfileRepository;
 
     @Override
     @Transactional
@@ -50,6 +52,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         if (userOptional.isPresent()) {
             user = userOptional.get();
+
+            if (user.getRole() == Role.ROLE_GUEST
+                    && specProfileRepository.findByUser(user).isPresent()) {
+                user.updateRole(Role.ROLE_USER);
+            }
         } else {
             // First time login -> create new user
             String virtualNickname = "User_" + UUID.randomUUID().toString().substring(0, 8);

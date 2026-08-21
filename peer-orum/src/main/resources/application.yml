@@ -34,14 +34,15 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID:placeholder}
-            client-secret: ${GOOGLE_CLIENT_SECRET:placeholder}
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             scope:
               - profile
               - email
           kakao:
-            client-id: ${KAKAO_CLIENT_ID:placeholder}
-            client-secret: ${KAKAO_CLIENT_SECRET:placeholder}
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
@@ -49,8 +50,10 @@ spring:
               - profile_nickname
               - account_email
         provider:
+          google:
+            authorization-uri: "https://accounts.google.com/o/oauth2/v2/auth?prompt=select_account"
           kakao:
-            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            authorization-uri: "https://kauth.kakao.com/oauth/authorize?prompt=login"
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
@@ -69,8 +72,9 @@ spring:
             enable: true
 
 jwt:
-  secret: ${JWT_SECRET:vdfio394jfi30j49gj4309gj340gjf340gjf340gjf0349gf340gf3409gf3049gf}
+  secret: ${JWT_SECRET}
   expiration: 86400000 # 1 day
+  refresh-expiration: 1209600000 # Refresh Token: 14 days
 
 springdoc:
   swagger-ui:

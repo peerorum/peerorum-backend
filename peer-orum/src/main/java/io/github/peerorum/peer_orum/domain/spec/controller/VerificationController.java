@@ -40,12 +40,12 @@ public class VerificationController {
                                                @RequestPart(value = "file", required = false) MultipartFile file) {
         User user = userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
-        
+
         String fileUrl = s3UploadService.uploadFile(file, "certificates");
 
         VerificationResponse response = verificationService.requestCertificateVerification(
                 user.getId(), request.getCertName(), request.getCertNo(), request.getIssueDate(), fileUrl, file);
-        
+
         return ApiResponse.success("Certificate verification requested", response);
     }
 
@@ -56,12 +56,12 @@ public class VerificationController {
                                             @RequestPart(value = "file", required = false) MultipartFile file) {
         User user = userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
-        
+
         String fileUrl = s3UploadService.uploadFile(file, "activities");
 
         VerificationResponse response = verificationService.requestActivityVerification(
                 user.getId(), request.getActivityName(), request.getAuthKey(), fileUrl, file);
-        
+
         return ApiResponse.success("Activity verification submitted", response);
     }
 
@@ -72,10 +72,10 @@ public class VerificationController {
                                             @RequestPart(value = "file", required = false) MultipartFile file) {
         User user = userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
-        
+
         VerificationResponse response = verificationService.requestGpaVerification(
                 user.getId(), request.getGpa(), request.getScoreType(), request.getPercentile(), request.getMajorAverage(), file);
-        
+
         return ApiResponse.success("GPA verification completed", response);
     }
 
@@ -86,10 +86,10 @@ public class VerificationController {
                                             @RequestPart(value = "file", required = false) MultipartFile file) {
         User user = userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
-        
+
         VerificationResponse response = verificationService.requestLanguageVerification(
                 user.getId(), request.getTestName(), request.getScore(), request.getDate(), file);
-        
+
         return ApiResponse.success("Language verification completed", response);
     }
 }

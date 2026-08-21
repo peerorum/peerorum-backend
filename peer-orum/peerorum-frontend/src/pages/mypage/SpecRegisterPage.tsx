@@ -281,7 +281,7 @@ export default function SpecRegisterPage() {
 
   const handleVerifyEntry = async (category: CategoryConfig, entry: Entry, index: number) => {
     if (!isEntryComplete(category, entry)) return
-    
+
     const file = entry['file'] as File | undefined
     if (!file) {
       alert('증빙 이미지를 첨부해주세요.')
@@ -306,19 +306,19 @@ export default function SpecRegisterPage() {
         formData.append('request', reqBlob)
         res = await api.post('/verification/activity', formData)
       } else if (category.key === 'gpa') {
-        const reqBlob = new Blob([JSON.stringify({ 
-          gpa: Number(entry['gpa']), 
-          scoreType: entry['scoreType'] || '4.5 만점', 
+        const reqBlob = new Blob([JSON.stringify({
+          gpa: Number(entry['gpa']),
+          scoreType: entry['scoreType'] || '4.5 만점',
           percentile: entry['percentile'] ? Number(entry['percentile']) : null,
           majorAverage: entry['majorAverage'] ? Number(entry['majorAverage']) : null
         })], { type: 'application/json' })
         formData.append('request', reqBlob)
         res = await api.post('/verification/gpa', formData)
       } else if (category.key === 'language') {
-        const reqBlob = new Blob([JSON.stringify({ 
-          testName: entry['test'] || 'TOEIC', 
-          score: entry['score'], 
-          date: entry['date'] || null 
+        const reqBlob = new Blob([JSON.stringify({
+          testName: entry['test'] || 'TOEIC',
+          score: entry['score'],
+          date: entry['date'] || null
         })], { type: 'application/json' })
         formData.append('request', reqBlob)
         res = await api.post('/verification/language', formData)
