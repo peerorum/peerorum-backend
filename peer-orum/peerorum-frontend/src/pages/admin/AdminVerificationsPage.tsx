@@ -1,17 +1,44 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Download, FileText, MoreVertical, Search } from 'lucide-react'
 import AdminLayout from '../../layouts/AdminLayout'
-import { ADMIN_VERIFICATIONS } from '../../data/mockAdmin'
+import { fetchAdminVerifications, type AdminVerificationData } from '../../api/admin'
 
-const TABS = [
-  { key: 'all', label: '전체', count: 248 },
-  { key: 'pending', label: '대기 중', count: 32 },
-  { key: 'approved', label: '승인 완료', count: 198 },
-  { key: 'rejected', label: '거절됨', count: 18 },
-] as const
+const STATUS_STYLE: Record<string, string> = {
+  '대기 중': 'bg-orange-50 text-orange-600',
+  '검토 중': 'bg-blue-50 text-blue-600',
+  '처리 완료': 'bg-emerald-50 text-emerald-600',
+  '거절됨': 'bg-rose-50 text-rose-600',
+}
 
 export default function AdminVerificationsPage() {
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]['key']>('pending')
+  const [activeTab, setActiveTab] = useState('pending')
+  const [verifications, setVerifications] = useState<AdminVerificationData[]>([])
+
+  useEffect(() => {
+    fetchAdminVerifications().then(data => setVerifications(data.verifications)).catch(console.error)
+  }, [])
+
+  const counts = {
+    all: verifications.length,
+    pending: verifications.filter(v => v.status === '대기 중').length,
+    approved: verifications.filter(v => v.status === '처리 완료').length,
+    rejected: verifications.filter(v => v.status === '거절됨').length,
+  }
+
+  const TABS = [
+    { key: 'all', label: '전체', count: counts.all },
+    { key: 'pending', label: '대기 중', count: counts.pending },
+    { key: 'approved', label: '승인 완료', count: counts.approved },
+    { key: 'rejected', label: '거절됨', count: counts.rejected },
+  ] as const
+
+  const filteredData = verifications.filter(v => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'pending') return v.status === '대기 중';
+    if (activeTab === 'approved') return v.status === '처리 완료';
+    if (activeTab === 'rejected') return v.status === '거절됨';
+    return true;
+  })
 
   return (
     <AdminLayout>
@@ -90,8 +117,14 @@ export default function AdminVerificationsPage() {
               </tr>
             </thead>
             <tbody>
-              {ADMIN_VERIFICATIONS.map((row) => (
-                <tr key={row.handle} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60">
+              {filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-sm text-gray-500">
+                    인증 요청이 없습니다.
+                  </td>
+                </tr>
+              ) : filteredData.map((row) => (
+                <tr key={row.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60">
                   <td className="px-5 py-3.5">
                     <span className="flex items-center gap-2.5">
                       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-[11px] font-bold text-gray-500">
@@ -116,24 +149,28 @@ export default function AdminVerificationsPage() {
                   </td>
                   <td className="px-3 py-3.5 text-gray-500">{row.submittedAt}</td>
                   <td className="px-3 py-3.5">
-                    <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[11.5px] font-semibold text-orange-600">
+                    <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${STATUS_STYLE[row.status] || STATUS_STYLE['대기 중']}`}>
                       {row.status}
                     </span>
                   </td>
                   <td className="px-3 py-3.5">
                     <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        type="button"
-                        className="rounded-lg border border-blue-200 px-3 py-1.5 text-[12px] font-semibold text-blue-600 hover:bg-blue-50"
-                      >
-                        승인
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded-lg border border-rose-200 px-3 py-1.5 text-[12px] font-semibold text-rose-600 hover:bg-rose-50"
-                      >
-                        거절
-                      </button>
+                      {row.status === '대기 중' && (
+                        <>
+                          <button
+                            type="button"
+                            className="rounded-lg border border-blue-200 px-3 py-1.5 text-[12px] font-semibold text-blue-600 hover:bg-blue-50"
+                          >
+                            승인
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-lg border border-rose-200 px-3 py-1.5 text-[12px] font-semibold text-rose-600 hover:bg-rose-50"
+                          >
+                            거절
+                          </button>
+                        </>
+                      )}
                       <button
                         type="button"
                         aria-label="더보기"
@@ -150,7 +187,7 @@ export default function AdminVerificationsPage() {
         </div>
 
         <div className="flex items-center justify-between px-5 py-4">
-          <span className="text-[12.5px] text-gray-400">전체 32건</span>
+          <span className="text-[12.5px] text-gray-400">전체 {filteredData.length}건</span>
           <div className="flex items-center gap-1.5">
             <button
               type="button"

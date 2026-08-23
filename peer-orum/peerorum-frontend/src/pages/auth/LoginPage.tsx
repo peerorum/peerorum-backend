@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../layouts/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
@@ -6,10 +7,20 @@ export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
 
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    login()
-    navigate('/compare')
+    if (email === 'peeroreum1001@gmail.com' && password === 'vldjdhfma123@') {
+      localStorage.setItem('token', 'mock-admin-token')
+      login({ role: 'ROLE_ADMIN' })
+      navigate('/admin')
+    } else {
+      localStorage.setItem('token', 'mock-user-token')
+      login({ role: 'ROLE_USER' })
+      navigate('/compare')
+    }
   }
 
   return (
@@ -21,11 +32,15 @@ export default function LoginPage() {
           <input
             type="email"
             placeholder="이메일 주소를 입력해주세요"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[14px] outline-none placeholder:text-gray-400 focus:border-blue-500"
           />
           <input
             type="password"
             placeholder="비밀번호를 입력해주세요"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[14px] outline-none placeholder:text-gray-400 focus:border-blue-500"
           />
 

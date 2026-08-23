@@ -5,7 +5,6 @@ import StatTile from '../../components/admin/StatTile'
 import SignupTrendChart from '../../components/admin/SignupTrendChart'
 import GenderDonutChart from '../../components/admin/GenderDonutChart'
 import PenguinHero from '../../components/ui/PenguinHero'
-import { GENDER_DISTRIBUTION, RECENT_REPORTS, SIGNUP_TREND } from '../../data/mockAdmin'
 import { fetchAdminDashboard, type AdminDashboardData } from '../../api/admin'
 
 const REPORT_STATUS_STYLE: Record<string, string> = {
@@ -15,8 +14,8 @@ const REPORT_STATUS_STYLE: Record<string, string> = {
 }
 
 export default function AdminDashboardPage() {
-  const totalGender = GENDER_DISTRIBUTION.reduce((sum, item) => sum + item.value, 0)
   const [data, setData] = useState<AdminDashboardData | null>(null)
+  const totalGender = data?.genderDistribution ? data.genderDistribution.reduce((sum, item) => sum + item.value, 0) : 0
 
   useEffect(() => {
     fetchAdminDashboard().then(setData).catch(console.error)
@@ -69,14 +68,32 @@ export default function AdminDashboardPage() {
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm shadow-black/[0.02]">
           <p className="text-[14.5px] font-bold text-ink-900">사용자 가입 추이</p>
           <div className="mt-4">
-            <SignupTrendChart data={SIGNUP_TREND} />
+            {data?.signupTrend ? <SignupTrendChart data={data.signupTrend} /> : <div className="h-[300px] flex items-center justify-center text-gray-400">Loading...</div>}
           </div>
         </div>
 
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm shadow-black/[0.02]">
           <p className="text-[14.5px] font-bold text-ink-900">사용자 성별 분포</p>
           <div className="mt-6">
-            <GenderDonutChart segments={GENDER_DISTRIBUTION} total={totalGender} />
+            {data?.genderDistribution ? (
+              <GenderDonutChart 
+                segments={data.genderDistribution.map(g => {
+                  let strokeClass = 'stroke-gray-200'
+                  let dotClass = 'bg-gray-200'
+                  if (g.name === '남성') { strokeClass = 'stroke-blue-600'; dotClass = 'bg-blue-600' }
+                  else if (g.name === '여성') { strokeClass = 'stroke-blue-400'; dotClass = 'bg-blue-400' }
+                  
+                  return {
+                    label: g.name,
+                    value: g.value,
+                    percent: Math.round((g.value / totalGender) * 100),
+                    strokeClass,
+                    dotClass
+                  }
+                })} 
+                total={totalGender} 
+              />
+            ) : <div className="h-[300px] flex items-center justify-center text-gray-400">Loading...</div>}
           </div>
         </div>
       </div>
@@ -117,24 +134,26 @@ export default function AdminDashboardPage() {
             <span className="text-[12.5px] font-medium text-blue-600">전체 보기</span>
           </div>
           <ul className="mt-4 flex flex-col gap-3.5">
-            {RECENT_REPORTS.map((report, index) => (
-              <li key={`${report.title}-${index}`} className="flex items-center justify-between text-[13.5px]">
-                <span className="flex items-center gap-2.5">
-                  <Flag className="h-4 w-4 text-gray-300" />
-                  <span>
-                    <span className="font-semibold text-ink-900">{report.title}</span>
-                    <br />
-                    <span className="text-[12px] text-gray-400">신고자: {report.reporter}</span>
-                  </span>
-                </span>
-                <span className="flex flex-col items-end gap-1 text-gray-400">
-                  {report.time}
+            {data?.recentReports?.map((report) => (
+              <li
+                key={report.id}
+                className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 p-4 transition-colors hover:bg-gray-50"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-bold text-ink-900">{report.type}</span>
+                    <span className="text-[11px] text-gray-400">{report.id}</span>
+                  </div>
+                  <p className="mt-1 text-[12.5px] text-gray-500">{report.reason}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1.5">
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${REPORT_STATUS_STYLE[report.status]}`}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${REPORT_STATUS_STYLE[report.status]}`}
                   >
                     {report.status}
                   </span>
-                </span>
+                  <span className="text-[11.5px] text-gray-400">{report.date}</span>
+                </div>
               </li>
             ))}
           </ul>
