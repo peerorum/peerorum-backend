@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Award,
@@ -16,6 +17,8 @@ import MyPageLayout from '../../layouts/MyPageLayout'
 import PenguinMascot from '../../components/ui/PenguinMascot'
 import PenguinHero from '../../components/ui/PenguinHero'
 import { useAuth } from '../../context/AuthContext'
+import { fetchMyProfile } from '../../api/profile'
+import type { MyProfileData } from '../../api/profile'
 
 const REGISTERABLE_ITEMS = [
   { icon: GraduationCap, label: '학점', description: '재학중이거나 1학년일 경우 학점을 등록해요.' },
@@ -25,43 +28,6 @@ const REGISTERABLE_ITEMS = [
   { icon: Users, label: '인턴', description: '인턴 경험을 등록해요.' },
   { icon: Trophy, label: '수상', description: '수상 내역과 성과를 등록해요.' },
 ]
-
-const SUMMARY_STATS = [
-  { icon: GraduationCap, label: '학점', value: '4.29 / 4.5', percentile: '상위 23%' },
-  { icon: Globe2, label: '어학', value: 'TOEIC 780', percentile: '상위 31%' },
-  { icon: Award, label: '자격증', value: '4개' },
-  { icon: Briefcase, label: '대외활동', value: '3회' },
-  { icon: Users, label: '인턴', value: '1회' },
-  { icon: Trophy, label: '수상', value: '1회' },
-]
-
-const COURSES = [
-  { name: '마케팅관리', grade: 'A+' },
-  { name: '소비자행동론', grade: 'A+' },
-  { name: '데이터분석', grade: 'A0' },
-  { name: '경영전략', grade: 'A0' },
-]
-
-const CERTS = [
-  { name: 'ADsP', date: '2024.05.10' },
-  { name: '컴퓨터활용능력 2급', date: '2023.09.15' },
-  { name: 'SQLD', date: '2024.01.20' },
-  { name: '무역영어 1급', date: '2023.12.05' },
-]
-
-const ACTIVITIES = [
-  { name: '교내 마케팅 서포터즈 3기', period: '2024.03 - 2024.11' },
-  { name: '한국경제 대학생 기자단 21기', period: '2023.09 - 2024.02' },
-  { name: '대학 연합 마케팅 컨퍼런스 운영진', period: '2023.05 - 2023.11' },
-]
-
-const INTERN_TASKS = [
-  'SNS 콘텐츠 기획 및 운영',
-  '시장 조사 및 경쟁사 분석',
-  '프로모션 성과 분석 및 리포트 제작',
-]
-
-const AWARD_DETAILS = ['주최: 한국마케팅협회', '수상작: 대학생 잠재고객 브랜드 캠페인 제안']
 
 function DetailCard({
   icon: Icon,
@@ -98,8 +64,31 @@ function DetailCard({
 export default function MySpecsPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [profile, setProfile] = useState<MyProfileData | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  if (!user?.hasSpec) {
+  useEffect(() => {
+    if (user?.hasSpec) {
+      fetchMyProfile()
+        .then(setProfile)
+        .catch(console.error)
+        .finally(() => setLoading(false))
+    } else {
+      setLoading(false)
+    }
+  }, [user?.hasSpec])
+
+  if (loading) {
+    return (
+      <MyPageLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500">데이터를 불러오는 중입니다...</p>
+        </div>
+      </MyPageLayout>
+    )
+  }
+
+  if (!user?.hasSpec || !profile) {
     return (
       <MyPageLayout>
         <div className="flex items-start justify-between">
@@ -155,6 +144,15 @@ export default function MySpecsPage() {
     )
   }
 
+  const SUMMARY_STATS = [
+    { icon: GraduationCap, label: '학점', value: profile.gpa ? `${profile.gpa} / 4.5` : '-', percentile: '' },
+    { icon: Globe2, label: '어학', value: profile.toeicScore ? `TOEIC ${profile.toeicScore}` : '-', percentile: '' },
+    { icon: Award, label: '자격증', value: `${profile.certificates?.length || 0}개` },
+    { icon: Briefcase, label: '대외활동', value: `${profile.activities?.length || 0}회` },
+    { icon: Users, label: '인턴', value: '0회' }, // Placeholder as backend has no Intern entity yet
+    { icon: Trophy, label: '수상', value: '0회' }, // Placeholder as backend has no Trophy entity yet
+  ]
+
   return (
     <MyPageLayout>
       <div className="flex items-start justify-between">
@@ -184,13 +182,10 @@ export default function MySpecsPage() {
           <PenguinMascot className="h-14 w-14" />
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[16px] font-bold text-ink-900">유경</span>
-              <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-600">
-                상위 23%
-              </span>
+              <span className="text-[16px] font-bold text-ink-900">{profile.name}</span>
             </div>
             <p className="mt-0.5 text-[13px] text-gray-500">
-              단국대학교 경영학과 4학년 · 마케팅 희망
+              {profile.university} {profile.major} {profile.entranceYear ? `${profile.entranceYear}학번` : ''} · {profile.desiredJob} 희망
             </p>
           </div>
         </div>
@@ -219,28 +214,14 @@ export default function MySpecsPage() {
         <DetailCard icon={GraduationCap} title="학업">
           <div>
             <div className="flex items-baseline justify-between">
-              <span className="text-[20px] font-bold text-ink-900">4.29 / 4.5</span>
-              <span className="text-[12px] font-semibold text-blue-600">상위 23%</span>
+              <span className="text-[20px] font-bold text-ink-900">{profile.gpa ? profile.gpa : 0} / 4.5</span>
             </div>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
-              <div className="h-full w-[95%] rounded-full bg-blue-600" />
+              <div
+                className="h-full rounded-full bg-blue-600"
+                style={{ width: `${((profile.gpa || 0) / 4.5) * 100}%` }}
+              />
             </div>
-            <p className="mt-1.5 text-[11.5px] text-gray-400">전공 평균 3.65 / 4.5</p>
-          </div>
-
-          <div className="mt-4 rounded-xl bg-gray-50 p-3.5">
-            <p className="mb-2 text-[12.5px] font-semibold text-gray-500">주요 수강 과목</p>
-            <ul className="flex flex-col gap-1.5">
-              {COURSES.map((course) => (
-                <li key={course.name} className="flex justify-between text-[13px] text-ink-900">
-                  <span>{course.name}</span>
-                  <span className="font-semibold">{course.grade}</span>
-                </li>
-              ))}
-            </ul>
-            <button className="mt-2 text-[12px] font-medium text-blue-600 hover:underline">
-              더보기 &gt;
-            </button>
           </div>
         </DetailCard>
 
@@ -249,79 +230,72 @@ export default function MySpecsPage() {
             <div>
               <div className="flex items-baseline justify-between">
                 <span className="text-[13px] font-medium text-gray-500">TOEIC</span>
-                <span className="text-[12px] font-semibold text-blue-600">상위 31%</span>
               </div>
               <div className="mt-1 flex items-center gap-2">
-                <span className="text-[18px] font-bold text-ink-900">780</span>
+                <span className="text-[18px] font-bold text-ink-900">{profile.toeicScore || '-'}</span>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
-                  <div className="h-full w-[78%] rounded-full bg-blue-600" />
+                  <div
+                    className="h-full rounded-full bg-blue-600"
+                    style={{ width: `${((profile.toeicScore || 0) / 990) * 100}%` }}
+                  />
                 </div>
               </div>
             </div>
             <div>
               <div className="flex items-baseline justify-between">
                 <span className="text-[13px] font-medium text-gray-500">OPIc</span>
-                <span className="text-[12px] font-semibold text-blue-600">상위 28%</span>
               </div>
               <div className="mt-1 flex items-center gap-2">
-                <span className="text-[18px] font-bold text-ink-900">IH</span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
-                  <div className="h-full w-[72%] rounded-full bg-blue-600" />
-                </div>
+                <span className="text-[18px] font-bold text-ink-900">{profile.opicGrade || '-'}</span>
+              </div>
+            </div>
+            <div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-[13px] font-medium text-gray-500">TOEIC Speaking</span>
+              </div>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="text-[18px] font-bold text-ink-900">{profile.toeicSpeakingGrade || '-'}</span>
               </div>
             </div>
           </div>
         </DetailCard>
 
         <DetailCard icon={Award} title="자격증" onAdd>
-          <ul className="flex flex-col gap-2.5">
-            {CERTS.map((cert) => (
-              <li key={cert.name} className="flex items-center justify-between text-[13.5px]">
-                <span className="font-medium text-ink-900">{cert.name}</span>
-                <span className="text-gray-400">{cert.date}</span>
-              </li>
-            ))}
-          </ul>
+          {profile.certificates?.length > 0 ? (
+            <ul className="flex flex-col gap-2.5">
+              {profile.certificates.map((cert) => (
+                <li key={cert.id} className="flex items-center justify-between text-[13.5px]">
+                  <span className="font-medium text-ink-900">{cert.certName}</span>
+                  <span className="text-gray-400">{cert.issueDate}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-[13px] text-gray-400 text-center py-4">등록된 자격증이 없습니다.</p>
+          )}
         </DetailCard>
 
         <DetailCard icon={Briefcase} title="대외활동" onAdd>
-          <ul className="flex flex-col gap-2.5">
-            {ACTIVITIES.map((activity) => (
-              <li key={activity.name} className="text-[13.5px]">
-                <p className="font-medium text-ink-900">{activity.name}</p>
-                <p className="text-[12px] text-gray-400">{activity.period}</p>
-              </li>
-            ))}
-          </ul>
-          <button className="mt-3 text-[12px] font-medium text-blue-600 hover:underline">
-            더보기 &gt;
-          </button>
+          {profile.activities?.length > 0 ? (
+            <ul className="flex flex-col gap-2.5">
+              {profile.activities.map((activity) => (
+                <li key={activity.id} className="text-[13.5px]">
+                  <p className="font-medium text-ink-900">{activity.activityName}</p>
+                  <p className="text-[12px] text-gray-400">인증키: {activity.authKey}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-[13px] text-gray-400 text-center py-4">등록된 대외활동이 없습니다.</p>
+          )}
         </DetailCard>
 
         <DetailCard icon={Users} title="인턴 경험" onAdd>
-          <p className="text-[13.5px] font-medium text-ink-900">ABC 마케팅 인턴</p>
-          <p className="text-[12px] text-gray-400">2024.06 - 2024.08</p>
-          <ul className="mt-2.5 flex flex-col gap-1.5">
-            {INTERN_TASKS.map((task) => (
-              <li key={task} className="flex gap-1.5 text-[12.5px] text-gray-500">
-                <span>·</span>
-                {task}
-              </li>
-            ))}
-          </ul>
+          <p className="text-[13px] text-gray-400 text-center py-4">등록된 인턴 경험이 없습니다.</p>
         </DetailCard>
 
         <DetailCard icon={Trophy} title="수상" onAdd>
-          <p className="text-[13.5px] font-medium text-ink-900">마케팅 아이디어 공모전 장려상</p>
-          <p className="text-[12px] text-gray-400">2024.06</p>
-          <ul className="mt-2.5 flex flex-col gap-1.5">
-            {AWARD_DETAILS.map((detail) => (
-              <li key={detail} className="flex gap-1.5 text-[12.5px] text-gray-500">
-                <span>·</span>
-                {detail}
-              </li>
-            ))}
-          </ul>
+          <p className="text-[13px] text-gray-400 text-center py-4">등록된 수상 내역이 없습니다.</p>
         </DetailCard>
       </div>
 
@@ -335,15 +309,6 @@ export default function MySpecsPage() {
             <p className="text-[12.5px] text-gray-500">
               스펙 등록 내역을 통해 성장 과정을 확인해보세요.
             </p>
-            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-gray-500">
-              <span>총 등록 18개</span>
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                최근 업데이트 2024.06.18
-              </span>
-              <span>이전 등록 항목 2개</span>
-              <span>첫 등록일 2023.03.15</span>
-            </div>
           </div>
         </div>
         <button className="shrink-0 rounded-lg bg-white px-4 py-2.5 text-[13px] font-semibold text-ink-900 shadow-sm hover:bg-gray-100">
