@@ -161,4 +161,21 @@ public class AuthController {
                 null
         );
     }
+
+    @Operation(summary = "Dev Login", description = "For local testing only. Generates a valid JWT for the given email.")
+    @PostMapping("/dev-login")
+    public ApiResponse<TokenReissueResponse> devLogin(@RequestBody java.util.Map<String, String> request) {
+        String email = request.get("email");
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
+        
+        String accessToken = jwtTokenProvider.createToken(
+                user.getEmail(),
+                user.getRole().name(),
+                null // anonymousUuid is optional for now
+        );
+        
+        TokenReissueResponse responseBody = new TokenReissueResponse(accessToken, null);
+        return ApiResponse.success("Dev login successful", responseBody);
+    }
 }

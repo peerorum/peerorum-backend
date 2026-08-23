@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../layouts/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
+import { api } from '../../api/axios'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -10,12 +11,17 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (email === 'peeroreum1001@gmail.com' && password === 'vldjdhfma123@') {
-      localStorage.setItem('token', 'mock-admin-token')
-      login({ role: 'ROLE_ADMIN' })
-      navigate('/admin')
+    if (email.trim() === 'peeroreum1001@gmail.com' && password.trim() === 'vldjdhfma123@') {
+      try {
+        const res = await api.post('/auth/dev-login', { email: 'peeroreum1001@gmail.com' })
+        localStorage.setItem('token', res.data.data.accessToken)
+        login({ role: 'ROLE_ADMIN' })
+        navigate('/admin')
+      } catch (err) {
+        alert('관리자 로그인 실패: ' + err)
+      }
     } else {
       localStorage.setItem('token', 'mock-user-token')
       login({ role: 'ROLE_USER' })
