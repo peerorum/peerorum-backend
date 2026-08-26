@@ -59,4 +59,14 @@ public class SpecProfile extends BaseTimeEntity {
         this.toeicSpeakingGrade = toeicSpeakingGrade;
         this.desiredJob = desiredJob;
     }
+
+    public void updateGpa(Double gpa) {
+        this.gpa = gpa;
+    }
+
+    public void updateLanguageScore(Integer toeicScore, String opicGrade, String toeicSpeakingGrade) {
+        if (toeicScore != null) this.toeicScore = toeicScore;
+        if (opicGrade != null) this.opicGrade = opicGrade;
+        if (toeicSpeakingGrade != null) this.toeicSpeakingGrade = toeicSpeakingGrade;
+    }
 }

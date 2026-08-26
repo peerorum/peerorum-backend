@@ -1,7 +1,8 @@
+import { useEffect, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, Download, MessageCircle, Plus, RefreshCw, Search, UserCheck, UserCog, UserX, Users } from 'lucide-react'
 import AdminLayout from '../../layouts/AdminLayout'
 import StatTile from '../../components/admin/StatTile'
-import { ADMIN_USERS } from '../../data/mockAdmin'
+import { fetchAdminUsers, type AdminUserData } from '../../api/admin'
 
 const FILTERS = ['전체 학교', '전체 학년', '전체 상태']
 
@@ -9,6 +10,7 @@ const STATUS_STYLE: Record<string, string> = {
   활성: 'bg-emerald-50 text-emerald-600',
   휴면: 'bg-orange-50 text-orange-600',
   정지: 'bg-rose-50 text-rose-600',
+  대기: 'bg-gray-100 text-gray-500',
 }
 
 const VERIFIED_STYLE: Record<string, string> = {
@@ -17,6 +19,24 @@ const VERIFIED_STYLE: Record<string, string> = {
 }
 
 export default function AdminUsersPage() {
+  const [users, setUsers] = useState<AdminUserData[]>([])
+  const [page, setPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalElements, setTotalElements] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    fetchAdminUsers(page, 10)
+      .then((res) => {
+        setUsers(res.users)
+        setTotalPages(res.totalPages)
+        setTotalElements(res.totalElements)
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [page])
+
   return (
     <AdminLayout>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -59,20 +79,15 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile icon={Users} iconClassName="bg-blue-50 text-blue-600" label="전체 사용자" value="2,543명" />
-        <StatTile
-          icon={UserCheck}
-          iconClassName="bg-emerald-50 text-emerald-600"
-          label="활성 사용자"
-          value="2,102명"
-        />
-        <StatTile icon={UserCog} iconClassName="bg-orange-50 text-orange-600" label="휴면 계정" value="312명" />
-        <StatTile icon={UserX} iconClassName="bg-rose-50 text-rose-600" label="정지 계정" value="129명" />
+        <StatTile icon={Users} iconClassName="bg-blue-50 text-blue-600" label="전체 사용자" value={`${totalElements.toLocaleString()}명`} />
+        <StatTile icon={UserCheck} iconClassName="bg-emerald-50 text-emerald-600" label="활성 사용자" value="-" />
+        <StatTile icon={UserCog} iconClassName="bg-orange-50 text-orange-600" label="휴면 계정" value="-" />
+        <StatTile icon={UserX} iconClassName="bg-rose-50 text-rose-600" label="정지 계정" value="-" />
       </div>
 
       <div className="mt-5 rounded-2xl border border-gray-100 bg-white shadow-sm shadow-black/[0.02]">
         <div className="flex items-center justify-between px-5 py-4">
-          <p className="text-[13.5px] font-semibold text-ink-900">총 2,543명</p>
+          <p className="text-[13.5px] font-semibold text-ink-900">총 {totalElements.toLocaleString()}명</p>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -81,22 +96,15 @@ export default function AdminUsersPage() {
               <Download className="h-3.5 w-3.5" />
               내보내기
             </button>
-            <button
-              type="button"
-              aria-label="새로고침"
-              className="flex items-center justify-center rounded-lg border border-gray-200 p-2 text-gray-500 hover:bg-gray-50"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-            </button>
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] border-collapse text-left text-[13px]">
-            <thead>
-              <tr className="border-y border-gray-100 text-gray-400">
-                <th className="px-5 py-3 font-medium">이름</th>
-                <th className="px-3 py-3 font-medium">아이디</th>
+          <table className="w-full text-left text-[13.5px]">
+            <thead className="bg-gray-50/50 text-gray-500">
+              <tr>
+                <th className="px-5 py-3 font-medium">사용자 이름</th>
+                <th className="px-3 py-3 font-medium">아이디 (핸들)</th>
                 <th className="px-3 py-3 font-medium">학교</th>
                 <th className="px-3 py-3 font-medium">전공</th>
                 <th className="px-3 py-3 font-medium">학년</th>
@@ -107,88 +115,80 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {ADMIN_USERS.map((row) => (
-                <tr key={row.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60">
-                  <td className="px-5 py-3.5">
-                    <span className="flex items-center gap-2.5 font-semibold text-ink-900">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-[11px] font-bold text-gray-500">
-                        {row.name.slice(0, 1)}
-                      </span>
-                      {row.name}
-                    </span>
-                  </td>
-                  <td className="px-3 py-3.5 text-gray-500">{row.id}</td>
-                  <td className="px-3 py-3.5 text-gray-500">{row.school}</td>
-                  <td className="px-3 py-3.5 text-gray-500">{row.major}</td>
-                  <td className="px-3 py-3.5 text-gray-500">{row.grade}</td>
-                  <td className="px-3 py-3.5 text-gray-500">{row.joinedAt}</td>
-                  <td className="px-3 py-3.5">
-                    <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${STATUS_STYLE[row.status]}`}>
-                      {row.status}
-                    </span>
-                  </td>
-                  <td className="px-3 py-3.5">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${VERIFIED_STYLE[row.verified]}`}
-                    >
-                      {row.verified}
-                    </span>
-                  </td>
-                  <td className="px-3 py-3.5">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        type="button"
-                        className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-[12px] font-medium text-ink-900 hover:bg-gray-50"
-                      >
-                        상세 보기
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="메시지"
-                        className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+              {loading ? (
+                <tr>
+                  <td colSpan={9} className="py-8 text-center text-gray-400">
+                    데이터를 불러오는 중입니다...
                   </td>
                 </tr>
-              ))}
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-8 text-center text-gray-400">
+                    사용자가 없습니다.
+                  </td>
+                </tr>
+              ) : (
+                users.map((row) => (
+                  <tr key={row.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60">
+                    <td className="px-5 py-3.5">
+                      <span className="flex items-center gap-2.5 font-semibold text-ink-900">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-[11px] font-bold text-gray-500">
+                          {row.name ? row.name.slice(0, 1) : '-'}
+                        </span>
+                        {row.name}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3.5 text-gray-500">{row.id}</td>
+                    <td className="px-3 py-3.5 text-gray-500">{row.school}</td>
+                    <td className="px-3 py-3.5 text-gray-500">{row.major}</td>
+                    <td className="px-3 py-3.5 text-gray-500">{row.grade}</td>
+                    <td className="px-3 py-3.5 text-gray-500">{row.joinedAt}</td>
+                    <td className="px-3 py-3.5">
+                      <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${STATUS_STYLE[row.status] || STATUS_STYLE['대기']}`}>
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3.5">
+                      <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${VERIFIED_STYLE[row.verified] || VERIFIED_STYLE['인증대기']}`}>
+                        {row.verified}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3.5 text-right">
+                      <button className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700">
+                        <MessageCircle className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
         <div className="flex items-center justify-between px-5 py-4">
-          <span className="text-[12.5px] text-gray-400">1-10 / 2,543명</span>
+          <span className="text-[12.5px] text-gray-400">
+            {totalElements > 0 
+              ? `${page * 10 + 1}-${Math.min((page + 1) * 10, totalElements)} / ${totalElements.toLocaleString()}명`
+              : '0명'
+            }
+          </span>
           <div className="flex items-center gap-1.5">
             <button
               type="button"
-              aria-label="이전"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50"
+              disabled={page === 0}
+              onClick={() => setPage(p => Math.max(0, p - 1))}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 disabled:opacity-50"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            {[1, 2, 3, 4, 5].map((page) => (
-              <button
-                key={page}
-                type="button"
-                className={`flex h-8 w-8 items-center justify-center rounded-lg text-[12.5px] font-medium ${
-                  page === 1 ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-            <span className="px-1 text-gray-400">…</span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-[12.5px] font-medium text-white">
+              {page + 1}
+            </span>
             <button
               type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-[12.5px] font-medium text-gray-500 hover:bg-gray-50"
-            >
-              255
-            </button>
-            <button
-              type="button"
-              aria-label="다음"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 disabled:opacity-50"
             >
               <ChevronRight className="h-4 w-4" />
             </button>

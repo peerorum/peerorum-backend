@@ -19,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
+import io.github.peerorum.peer_orum.domain.spec.repository.SpecProfileRepository;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -28,6 +30,7 @@ public class VerificationService {
     private final ActivityRepository activityRepository;
     private final UserRepository userRepository;
     private final AiService aiService;
+    private final SpecProfileRepository specProfileRepository;
 
     @Transactional
     public VerificationResponse requestCertificateVerification(Long userId, String certName, String certNo, LocalDate issueDate, String fileUrl, MultipartFile file) {
@@ -125,6 +128,13 @@ public class VerificationService {
             log.warn("File is empty or null, cannot verify GPA via AI");
         }
 
+        if (isValid) {
+            specProfileRepository.findByUser(user).ifPresent(specProfile -> {
+                specProfile.updateGpa(gpa);
+                specProfileRepository.save(specProfile);
+            });
+        }
+
         return new VerificationResponse(null, isValid ? VerificationStatus.VERIFIED : VerificationStatus.REJECTED);
     }
 
@@ -142,6 +152,19 @@ public class VerificationService {
             }
         } else {
             log.warn("File is empty or null, cannot verify Language via AI");
+        }
+
+        if (isValid) {
+            specProfileRepository.findByUser(user).ifPresent(specProfile -> {
+                if (testName.toUpperCase().contains("TOEIC") && !testName.toUpperCase().contains("SPEAKING")) {
+                    try { specProfile.updateLanguageScore(Integer.parseInt(score), null, null); } catch (NumberFormatException ignored) {}
+                } else if (testName.toUpperCase().contains("OPIC")) {
+                    specProfile.updateLanguageScore(null, score, null);
+                } else if (testName.toUpperCase().contains("TOEIC SPEAKING")) {
+                    specProfile.updateLanguageScore(null, null, score);
+                }
+                specProfileRepository.save(specProfile);
+            });
         }
 
         return new VerificationResponse(null, isValid ? VerificationStatus.VERIFIED : VerificationStatus.REJECTED);

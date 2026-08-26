@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,5 +36,13 @@ public class ProfileController {
         profileService.createProfile(user.getId(), request);
         
         return ApiResponse.success("Profile created successfully", null);
+    }
+    @Operation(summary = "Get My Profile", description = "Get the current user's profile and spec details")
+    @GetMapping("/me")
+    public ApiResponse<io.github.peerorum.peer_orum.domain.comparison.dto.MyProfileResponse> getMyProfile(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
+        User user = userRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
+        
+        return ApiResponse.success("Profile retrieved successfully", profileService.getMyProfile(user.getId()));
     }
 }
