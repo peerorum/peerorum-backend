@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import {
   Award,
   Briefcase,
-  Clock,
   FileEdit,
   GraduationCap,
   Globe2,
