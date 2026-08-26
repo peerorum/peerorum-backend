@@ -32,21 +32,23 @@ const STATUS_STYLE: Record<string, string> = {
 
 export default function VerificationStatusPage() {
   const [activeTab, setActiveTab] = useState('전체')
-  const { user } = useAuth()
+  const { user, setHasSpec } = useAuth()
   const navigate = useNavigate()
   const [profile, setProfile] = useState<MyProfileData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (user?.hasSpec) {
-      fetchMyProfile()
-        .then(setProfile)
-        .catch(console.error)
-        .finally(() => setLoading(false))
-    } else {
-      setLoading(false)
-    }
-  }, [user?.hasSpec])
+    fetchMyProfile()
+      .then((data) => {
+        setProfile(data)
+        setHasSpec(true)
+      })
+      .catch((err) => {
+        console.error(err)
+        setHasSpec(false)
+      })
+      .finally(() => setLoading(false))
+  }, [setHasSpec])
 
   if (loading) {
     return (

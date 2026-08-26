@@ -1,15 +1,32 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../layouts/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
+import { api } from '../../api/axios'
 
 export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    login()
-    navigate('/compare')
+    if (email.trim() === 'peeroreum1001@gmail.com' && password.trim() === 'vldjdhfma123@') {
+      try {
+        const res = await api.post('/auth/dev-login', { email: 'peeroreum1001@gmail.com' })
+        localStorage.setItem('token', res.data.data.accessToken)
+        login({ role: 'ROLE_ADMIN' })
+        navigate('/admin')
+      } catch (err) {
+        alert('관리자 로그인 실패: ' + err)
+      }
+    } else {
+      localStorage.setItem('token', 'mock-user-token')
+      login({ role: 'ROLE_USER' })
+      navigate('/compare')
+    }
   }
 
   return (
@@ -21,11 +38,15 @@ export default function LoginPage() {
           <input
             type="email"
             placeholder="이메일 주소를 입력해주세요"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[14px] outline-none placeholder:text-gray-400 focus:border-blue-500"
           />
           <input
             type="password"
             placeholder="비밀번호를 입력해주세요"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[14px] outline-none placeholder:text-gray-400 focus:border-blue-500"
           />
 

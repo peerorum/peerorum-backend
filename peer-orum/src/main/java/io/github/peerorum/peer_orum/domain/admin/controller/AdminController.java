@@ -2,6 +2,7 @@ package io.github.peerorum.peer_orum.domain.admin.controller;
 
 import io.github.peerorum.peer_orum.domain.admin.dto.AdminDashboardResponse;
 import io.github.peerorum.peer_orum.domain.admin.dto.AdminUserResponse;
+import io.github.peerorum.peer_orum.domain.admin.dto.AdminVerificationListResponse;
 import io.github.peerorum.peer_orum.domain.admin.service.AdminService;
 import io.github.peerorum.peer_orum.global.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +28,15 @@ public class AdminController {
     @GetMapping("/users")
     public ApiResponse<AdminUserResponse> getUsers(Pageable pageable) {
         return ApiResponse.success(adminService.getUsers(pageable));
+    }
+
+    @GetMapping("/verifications")
+    public ApiResponse<AdminVerificationListResponse> getVerifications() {
+        return ApiResponse.success(adminService.getVerifications());
+    }
+
+    @GetMapping("/suspensions")
+    public ApiResponse<io.github.peerorum.peer_orum.domain.admin.dto.AdminSuspensionListResponse> getSuspensions() {
+        return ApiResponse.success(adminService.getSuspensions());
     }
 }
