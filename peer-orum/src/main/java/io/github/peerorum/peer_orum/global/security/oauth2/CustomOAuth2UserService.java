@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,11 +48,25 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
         }
 
-        Optional<User> userOptional = userRepository.findByEmail(userInfo.getEmail());
+        String normalizedEmail = userInfo.getEmail()
+                .trim()
+                .toLowerCase(Locale.ROOT);
+        Provider requestedProvider = Provider.valueOf(
+                registrationId.toUpperCase(Locale.ROOT)
+        );
+
+        Optional<User> userOptional =
+                userRepository.findByEmailIgnoreCase(normalizedEmail);
         User user;
 
         if (userOptional.isPresent()) {
             user = userOptional.get();
+
+            if (user.getProvider() != requestedProvider) {
+                throw new OAuth2AuthenticationException(
+                        providerConflictCode(user.getProvider())
+                );
+            }
 
             if (user.getRole() == Role.ROLE_GUEST
                     && specProfileRepository.findByUser(user).isPresent()) {
@@ -61,9 +76,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             // First time login -> create new user
             String virtualNickname = "User_" + UUID.randomUUID().toString().substring(0, 8);
             user = User.builder()
-                    .email(userInfo.getEmail())
+                    .email(normalizedEmail)
                     .name(userInfo.getName())
-                    .provider(Provider.valueOf(registrationId.toUpperCase()))
+                    .provider(requestedProvider)
                     .providerId(userInfo.getId())
                     .role(Role.ROLE_GUEST)
                     .virtualNickname(virtualNickname)
@@ -72,5 +87,13 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         }
 
         return new CustomOAuth2User(user, attributes, userNameAttributeName);
+    }
+
+    private String providerConflictCode(Provider provider) {
+        return switch (provider) {
+            case LOCAL -> "account_exists_with_local";
+            case KAKAO -> "account_exists_with_kakao";
+            case GOOGLE -> "account_exists_with_google";
+        };
     }
 }

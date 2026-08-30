@@ -1,13 +1,66 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../layouts/AuthLayout'
 import { useSignupModal } from '../../context/SignupModalContext'
+import { useAuth } from '../../context/AuthContext'
+import {
+  getApiErrorMessage,
+  saveAuthenticationSession,
+  signupLocal,
+} from '../../api/auth'
 
 export default function SignupPage() {
   const { open: openSignupModal } = useSignupModal()
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    openSignupModal('basic')
+    setErrorMessage('')
+
+    if (password !== passwordConfirm) {
+      setErrorMessage('비밀번호가 일치하지 않습니다.')
+      return
+    }
+
+    if (password.length < 8) {
+      setErrorMessage('비밀번호는 8자 이상이어야 합니다.')
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const session = await signupLocal({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+      })
+
+      saveAuthenticationSession(session)
+      login({
+        name: session.name,
+        role: session.role,
+        hasSpec: false,
+      })
+      openSignupModal('basic')
+      navigate('/compare')
+    } catch (error) {
+      setErrorMessage(
+        getApiErrorMessage(
+          error,
+          '회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.',
+        ),
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -22,25 +75,42 @@ export default function SignupPage() {
           <input
             type="text"
             required
+            maxLength={50}
             placeholder="이름을 입력해주세요"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoComplete="name"
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[14px] outline-none placeholder:text-gray-400 focus:border-blue-500"
           />
           <input
             type="email"
             required
             placeholder="이메일을 입력해주세요"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[14px] outline-none placeholder:text-gray-400 focus:border-blue-500"
           />
           <input
             type="password"
             required
-            placeholder="비밀번호를 입력해주세요"
+            minLength={8}
+            maxLength={72}
+            placeholder="비밀번호를 입력해주세요 (8자 이상)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[14px] outline-none placeholder:text-gray-400 focus:border-blue-500"
           />
           <input
             type="password"
             required
+            minLength={8}
+            maxLength={72}
             placeholder="비밀번호를 한 번 더 입력해주세요"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            autoComplete="new-password"
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[14px] outline-none placeholder:text-gray-400 focus:border-blue-500"
           />
 
@@ -57,11 +127,21 @@ export default function SignupPage() {
             </span>
           </label>
 
+          {errorMessage && (
+            <p
+              role="alert"
+              className="rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-600"
+            >
+              {errorMessage}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="mt-1 w-full rounded-xl bg-blue-600 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-blue-700"
+            disabled={isSubmitting}
+            className="mt-1 w-full rounded-xl bg-blue-600 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            회원가입
+            {isSubmitting ? '회원가입 중...' : '회원가입'}
           </button>
         </form>
 

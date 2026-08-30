@@ -9,6 +9,10 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+  h2:
+    console:
+      enabled: false
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,3 +27,7 @@ logging:
   level:
     root: INFO
     io.github.peerorum: INFO
+
+app:
+  cookie:
+    secure: true

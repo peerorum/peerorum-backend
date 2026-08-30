@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     return {
-      name: 'User',
+      name: localStorage.getItem('name') || 'User',
       hasSpec: localStorage.getItem('hasSpec') === 'true',
       role: getStoredRole(),
     }
@@ -64,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     localStorage.setItem('hasSpec', String(hasSpec))
     localStorage.setItem('role', role)
+    localStorage.setItem('name', partial?.name ?? 'User')
 
     setUser({
       name: partial?.name ?? 'User',
@@ -80,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('role')
       localStorage.removeItem('uuid')
       localStorage.removeItem('hasSpec')
+      localStorage.removeItem('name')
       setUser(null)
     }
   }, [])

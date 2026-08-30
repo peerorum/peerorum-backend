@@ -20,7 +20,13 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        log.error("handleMethodArgumentNotValidException", e);
+        log.warn(
+                "Request validation failed. fields={}",
+                e.getBindingResult().getFieldErrors().stream()
+                        .map(org.springframework.validation.FieldError::getField)
+                        .distinct()
+                        .toList()
+        );
         final ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, e.getBindingResult());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
@@ -30,7 +36,13 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BindException.class)
     protected ResponseEntity<ErrorResponse> handleBindException(BindException e) {
-        log.error("handleBindException", e);
+        log.warn(
+                "Request binding failed. fields={}",
+                e.getBindingResult().getFieldErrors().stream()
+                        .map(org.springframework.validation.FieldError::getField)
+                        .distinct()
+                        .toList()
+        );
         final ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, e.getBindingResult());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
@@ -70,9 +82,13 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(CustomException.class)
     protected ResponseEntity<ErrorResponse> handleBusinessException(final CustomException e) {
-        log.error("handleCustomException", e);
         final ErrorCode errorCode = e.getErrorCode();
-        final ErrorResponse response = ErrorResponse.of(errorCode);
+        log.warn(
+                "Business exception. code={}, message={}",
+                errorCode.getCode(),
+                e.getMessage()
+        );
+        final ErrorResponse response = ErrorResponse.of(errorCode, e.getMessage());
         return new ResponseEntity<>(response, HttpStatus.valueOf(errorCode.getStatus().value()));
     }
 

@@ -1,31 +1,77 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AuthLayout from '../../layouts/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
-import { api } from '../../api/axios'
+import { useSignupModal } from '../../context/SignupModalContext'
+import {
+  getApiErrorMessage,
+  loginLocal,
+  saveAuthenticationSession,
+} from '../../api/auth'
+
+function oauthErrorMessage(errorCode: string | null) {
+  switch (errorCode) {
+    case 'account_exists_with_local':
+      return '이미 일반 회원가입으로 가입된 이메일입니다. 이메일로 로그인해주세요.'
+    case 'account_exists_with_kakao':
+      return '이미 카카오로 가입된 이메일입니다. 카카오로 로그인해주세요.'
+    case 'account_exists_with_google':
+      return '이미 Google로 가입된 이메일입니다. Google로 로그인해주세요.'
+    case 'oauth2_failed':
+      return '소셜 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.'
+    default:
+      return ''
+  }
+}
 
 export default function LoginPage() {
   const { login } = useAuth()
+  const { open: openSignupModal } = useSignupModal()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState(
+    () => oauthErrorMessage(searchParams.get('error')),
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (email.trim() === 'peeroreum1001@gmail.com' && password.trim() === 'vldjdhfma123@') {
-      try {
-        const res = await api.post('/auth/dev-login', { email: 'peeroreum1001@gmail.com' })
-        localStorage.setItem('token', res.data.data.accessToken)
-        login({ role: 'ROLE_ADMIN' })
+    setErrorMessage('')
+    setIsSubmitting(true)
+
+    try {
+      const session = await loginLocal({
+        email: email.trim(),
+        password,
+      })
+
+      saveAuthenticationSession(session)
+      login({
+        name: session.name,
+        role: session.role,
+        hasSpec: session.role !== 'ROLE_GUEST',
+      })
+
+      if (session.role === 'ROLE_ADMIN') {
         navigate('/admin')
-      } catch (err) {
-        alert('관리자 로그인 실패: ' + err)
+      } else if (session.role === 'ROLE_GUEST') {
+        openSignupModal('basic')
+        navigate('/compare')
+      } else {
+        navigate('/mypage/specs')
       }
-    } else {
-      localStorage.setItem('token', 'mock-user-token')
-      login({ role: 'ROLE_USER' })
-      navigate('/compare')
+    } catch (error) {
+      setErrorMessage(
+        getApiErrorMessage(
+          error,
+          '로그인에 실패했습니다. 잠시 후 다시 시도해주세요.',
+        ),
+      )
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -40,6 +86,8 @@ export default function LoginPage() {
             placeholder="이메일 주소를 입력해주세요"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[14px] outline-none placeholder:text-gray-400 focus:border-blue-500"
           />
           <input
@@ -47,6 +95,8 @@ export default function LoginPage() {
             placeholder="비밀번호를 입력해주세요"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[14px] outline-none placeholder:text-gray-400 focus:border-blue-500"
           />
 
@@ -55,16 +105,30 @@ export default function LoginPage() {
               <input type="checkbox" className="h-3.5 w-3.5 rounded border-gray-300" />
               로그인 상태 유지
             </label>
-            <a href="#" className="text-gray-400 hover:text-gray-600">
+            <button
+              type="button"
+              onClick={() => alert('비밀번호 찾기는 준비 중입니다.')}
+              className="text-gray-400 hover:text-gray-600"
+            >
               비밀번호 찾기
-            </a>
+            </button>
           </div>
+
+          {errorMessage && (
+            <p
+              role="alert"
+              className="rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-600"
+            >
+              {errorMessage}
+            </p>
+          )}
 
           <button
             type="submit"
-            className="mt-1 w-full rounded-xl bg-blue-600 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-blue-700"
+            disabled={isSubmitting}
+            className="mt-1 w-full rounded-xl bg-blue-600 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            로그인
+            {isSubmitting ? '로그인 중...' : '로그인'}
           </button>
         </form>
 

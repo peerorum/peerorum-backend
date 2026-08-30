@@ -111,7 +111,9 @@ public class RefreshTokenService {
         return new TokenReissueResult(
                 newAccessToken,
                 newRefreshToken,
-                user.getAnonymousUuid()
+                user.getAnonymousUuid(),
+                user.getRole().name(),
+                user.getName()
         );
     }
 

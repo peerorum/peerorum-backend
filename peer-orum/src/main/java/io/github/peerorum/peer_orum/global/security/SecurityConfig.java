@@ -66,7 +66,6 @@ public class SecurityConfig {
                                         "/api/auth/**",
                                         "/login/**",
                                         "/oauth2/**",
-                                        "/api/test/**",
                                         "/api/majors/**"
                                 ).permitAll()
                                 .requestMatchers("/api/admin/**")
