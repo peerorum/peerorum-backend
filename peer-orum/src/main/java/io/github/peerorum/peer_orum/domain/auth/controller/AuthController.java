@@ -1,9 +1,15 @@
 package io.github.peerorum.peer_orum.domain.auth.controller;
 
+import io.github.peerorum.peer_orum.domain.auth.dto.AuthenticationResponse;
+import io.github.peerorum.peer_orum.domain.auth.dto.AuthenticationResult;
+import io.github.peerorum.peer_orum.domain.auth.dto.LocalLoginRequest;
+import io.github.peerorum.peer_orum.domain.auth.dto.LocalSignupRequest;
 import io.github.peerorum.peer_orum.domain.auth.dto.TokenReissueResult;
+import io.github.peerorum.peer_orum.domain.auth.service.LocalAuthService;
 import io.github.peerorum.peer_orum.global.security.jwt.JwtTokenProvider;
 import io.github.peerorum.peer_orum.global.security.jwt.RefreshTokenCookieManager;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CookieValue;
 import io.github.peerorum.peer_orum.domain.auth.dto.EmailVerificationRequest;
 import io.github.peerorum.peer_orum.domain.auth.dto.TokenReissueResponse;
@@ -38,6 +44,41 @@ public class AuthController {
     private final UserRepository userRepository;
     private final RefreshTokenCookieManager refreshTokenCookieManager;
     private final JwtTokenProvider jwtTokenProvider;
+    private final LocalAuthService localAuthService;
+
+    @Operation(
+            summary = "Sign Up with Email",
+            description = "Create a local account and issue access and refresh tokens"
+    )
+    @PostMapping("/signup")
+    public ApiResponse<AuthenticationResponse> signup(
+            @Valid @RequestBody LocalSignupRequest request,
+            HttpServletResponse servletResponse
+    ) {
+        AuthenticationResult result = localAuthService.signup(request);
+        return authenticationResponse(
+                "Signed up successfully",
+                result,
+                servletResponse
+        );
+    }
+
+    @Operation(
+            summary = "Log In with Email",
+            description = "Authenticate a local account and issue access and refresh tokens"
+    )
+    @PostMapping("/login")
+    public ApiResponse<AuthenticationResponse> login(
+            @Valid @RequestBody LocalLoginRequest request,
+            HttpServletResponse servletResponse
+    ) {
+        AuthenticationResult result = localAuthService.login(request);
+        return authenticationResponse(
+                "Logged in successfully",
+                result,
+                servletResponse
+        );
+    }
 
     @Operation(
             summary = "Send School Email Verification",
@@ -126,7 +167,9 @@ public class AuthController {
         TokenReissueResponse responseBody =
                 new TokenReissueResponse(
                         result.accessToken(),
-                        result.uuid()
+                        result.uuid(),
+                        result.role(),
+                        result.name()
                 );
 
         return ApiResponse.success(
@@ -162,20 +205,27 @@ public class AuthController {
         );
     }
 
-    @Operation(summary = "Dev Login", description = "For local testing only. Generates a valid JWT for the given email.")
-    @PostMapping("/dev-login")
-    public ApiResponse<TokenReissueResponse> devLogin(@RequestBody java.util.Map<String, String> request) {
-        String email = request.get("email");
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
-        
-        String accessToken = jwtTokenProvider.createToken(
-                user.getEmail(),
-                user.getRole().name(),
-                null // anonymousUuid is optional for now
+    private ApiResponse<AuthenticationResponse> authenticationResponse(
+            String message,
+            AuthenticationResult result,
+            HttpServletResponse servletResponse
+    ) {
+        refreshTokenCookieManager.addRefreshTokenCookie(
+                servletResponse,
+                result.refreshToken(),
+                jwtTokenProvider.getExpirationFromToken(
+                        result.refreshToken()
+                )
         );
-        
-        TokenReissueResponse responseBody = new TokenReissueResponse(accessToken, null);
-        return ApiResponse.success("Dev login successful", responseBody);
+
+        AuthenticationResponse responseBody =
+                new AuthenticationResponse(
+                        result.accessToken(),
+                        result.uuid(),
+                        result.role(),
+                        result.name()
+                );
+
+        return ApiResponse.success(message, responseBody);
     }
 }

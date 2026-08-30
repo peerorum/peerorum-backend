@@ -22,17 +22,26 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
+    const requestUrl = originalRequest?.url || ''
+    const skipsRefresh = [
+      '/auth/login',
+      '/auth/signup',
+      '/auth/refresh',
+    ].some((path) => requestUrl.includes(path))
 
     if (
       error.response?.status === 401 &&
       originalRequest &&
-      !originalRequest._retry
+      !originalRequest._retry &&
+      !skipsRefresh
     ) {
       originalRequest._retry = true
 
       try {
+        const baseURL = (api.defaults.baseURL || '/api')
+          .replace(/\/$/, '')
         const refreshResponse = await axios.post(
-          '/api/auth/refresh',
+          `${baseURL}/auth/refresh`,
           null,
           {
             withCredentials: true,
@@ -44,6 +53,10 @@ api.interceptors.response.use(
 
         const uuid =
           refreshResponse.data?.data?.uuid
+        const role =
+          refreshResponse.data?.data?.role
+        const name =
+          refreshResponse.data?.data?.name
 
         if (!newAccessToken) {
           throw new Error('새 Access Token이 없습니다.')
@@ -58,6 +71,14 @@ api.interceptors.response.use(
           localStorage.setItem('uuid', uuid)
         }
 
+        if (role) {
+          localStorage.setItem('role', role)
+        }
+
+        if (name) {
+          localStorage.setItem('name', name)
+        }
+
         originalRequest.headers.Authorization =
           `Bearer ${newAccessToken}`
 
@@ -66,6 +87,8 @@ api.interceptors.response.use(
         localStorage.removeItem('token')
         localStorage.removeItem('role')
         localStorage.removeItem('uuid')
+        localStorage.removeItem('name')
+        localStorage.removeItem('hasSpec')
 
         window.location.href = '/login'
 
@@ -75,18 +98,4 @@ api.interceptors.response.use(
 
     return Promise.reject(error)
   },
-)
-
-// Response Interceptor: Handle 401 Unauthorized
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('role')
-      localStorage.removeItem('uuid')
-      window.location.href = '/login'
-    }
-    return Promise.reject(error)
-  }
 )

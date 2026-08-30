@@ -1,60 +1,36 @@
 package io.github.peerorum.peer_orum.domain.ai.controller;
 
-import io.github.peerorum.peer_orum.domain.auth.repository.SchoolAuthRepository;
-import io.github.peerorum.peer_orum.domain.spec.repository.SpecProfileRepository;
-import io.github.peerorum.peer_orum.domain.user.repository.UserRepository;
 import io.github.peerorum.peer_orum.domain.ai.dto.AiJobInfoResponse;
 import io.github.peerorum.peer_orum.domain.ai.service.AiService;
-import io.github.peerorum.peer_orum.global.interceptor.GiveToGetInterceptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
-@WebMvcTest(AiController.class)
-@AutoConfigureMockMvc(addFilters = false) // Security Filter 무시
+@ExtendWith(MockitoExtension.class)
 class AiControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @Mock
     private AiService aiService;
 
-    @MockitoBean
-    private UserRepository userRepository;
-
-    @MockitoBean
-    private SpecProfileRepository specProfileRepository;
-
-    @MockitoBean
-    private SchoolAuthRepository schoolAuthRepository;
-
-    @MockitoBean
-    private GiveToGetInterceptor giveToGetInterceptor;
-
-    @MockitoBean
-    private JpaMetamodelMappingContext jpaMetamodelMappingContext;
-
     @BeforeEach
-    void setUp() throws Exception {
-        when(giveToGetInterceptor.preHandle(any(), any(), any()))
-                .thenReturn(true);
+    void setUp() {
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(new AiController(aiService))
+                .build();
     }
 
     @Test

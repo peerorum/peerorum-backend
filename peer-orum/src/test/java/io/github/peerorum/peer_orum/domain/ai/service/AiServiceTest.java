@@ -1,6 +1,5 @@
 package io.github.peerorum.peer_orum.domain.ai.service;
 
-import tools.jackson.databind.ObjectMapper;
 import io.github.peerorum.peer_orum.domain.ai.dto.AiJobInfoResponse;
 import io.github.peerorum.peer_orum.global.error.AiIntegrationException;
 import io.github.peerorum.peer_orum.global.error.ErrorCode;
@@ -31,9 +30,6 @@ class AiServiceTest {
     @Mock
     private RestTemplate restTemplate;
 
-    @Mock
-    private ObjectMapper objectMapper;
-
     @InjectMocks
     private AiService aiService;
 
@@ -57,13 +53,6 @@ class AiServiceTest {
         
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
         when(restTemplate.postForEntity(any(String.class), any(), eq(Map.class))).thenReturn(responseEntity);
-
-        Map<String, Object> parsedMap = Map.of(
-                "description", "설명",
-                "keyTasks", List.of("업무1"),
-                "requiredCompetencies", List.of("역량1")
-        );
-        when(objectMapper.readValue(jsonContent, Map.class)).thenReturn(parsedMap);
 
         // when
         AiJobInfoResponse response = aiService.getJobInfo(jobName);

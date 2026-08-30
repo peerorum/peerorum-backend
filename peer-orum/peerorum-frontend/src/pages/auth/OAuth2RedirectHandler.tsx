@@ -21,6 +21,12 @@ export default function OAuth2RedirectHandler() {
     const token = searchParams.get('token')
     const role = searchParams.get('role')
     const uuid = searchParams.get('uuid')
+    const normalizedRole =
+      role === 'ROLE_GUEST' ||
+      role === 'ROLE_USER' ||
+      role === 'ROLE_ADMIN'
+        ? role
+        : 'ROLE_USER'
 
     if (!token) {
       navigate('/login', { replace: true })
@@ -29,19 +35,23 @@ export default function OAuth2RedirectHandler() {
 
     localStorage.setItem('token', token)
 
-    if (role) {
-      localStorage.setItem('role', role)
-    }
+    localStorage.setItem('role', normalizedRole)
 
     if (uuid) {
       localStorage.setItem('uuid', uuid)
     }
 
-    login({ name: 'User' })
+    login({
+      name: 'User',
+      role: normalizedRole,
+      hasSpec: normalizedRole !== 'ROLE_GUEST',
+    })
 
-    if (role === 'ROLE_GUEST') {
+    if (normalizedRole === 'ROLE_GUEST') {
       openSignupModal('basic')
       navigate('/compare', { replace: true })
+    } else if (normalizedRole === 'ROLE_ADMIN') {
+      navigate('/admin', { replace: true })
     } else {
       navigate('/mypage/specs', { replace: true })
     }
