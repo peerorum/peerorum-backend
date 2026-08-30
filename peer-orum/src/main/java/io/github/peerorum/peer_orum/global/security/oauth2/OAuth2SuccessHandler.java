@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 
@@ -21,6 +22,9 @@ import java.io.IOException;
 @Component
 public class OAuth2SuccessHandler
         extends SimpleUrlAuthenticationSuccessHandler {
+
+    @Value("${FRONTEND_URL:http://localhost:5173}")
+    private String frontendUrl;
 
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
@@ -65,7 +69,7 @@ public class OAuth2SuccessHandler
 
         String redirectUrl = UriComponentsBuilder
                 .fromUriString(
-                        "http://localhost:5173/oauth2/redirect"
+                        frontendUrl + "/oauth2/redirect"
                 )
                 .queryParam("token", accessToken)
                 .queryParam(

@@ -127,7 +127,7 @@ export default function SignupModal() {
   useEffect(() => {
     if (isOpen) {
       setStep(initialStep)
-      fetch('http://localhost:8080/api/majors')
+      fetch('/api/majors')
         .then((res) => res.json())
         .then((data) => setMajors(data))
         .catch((err) => console.error('Failed to fetch majors', err))

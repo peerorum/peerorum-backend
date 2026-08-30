@@ -77,7 +77,7 @@ export default function LoginPage() {
         <div className="flex flex-col gap-2.5">
           <button
             type="button"
-            onClick={() => window.location.href = 'http://localhost:8080/oauth2/authorization/google'}
+            onClick={() => window.location.href = '/oauth2/authorization/google'}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-[14px] font-medium text-ink-900 hover:bg-gray-50"
           >
             <span className="text-[15px] font-bold text-[#4285F4]">G</span>
@@ -85,7 +85,7 @@ export default function LoginPage() {
           </button>
           <button
             type="button"
-            onClick={() => window.location.href = 'http://localhost:8080/oauth2/authorization/kakao'}
+            onClick={() => window.location.href = '/oauth2/authorization/kakao'}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-[#FEE500] py-3 text-[14px] font-medium text-[#191600] hover:brightness-95"
           >
             카카오로 계속하기
