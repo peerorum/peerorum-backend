@@ -75,14 +75,23 @@ export default function LoginPage() {
         </div>
 
         <div className="flex flex-col gap-2.5">
-          <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-[14px] font-medium text-ink-900 hover:bg-gray-50">
+          <button 
+            type="button"
+            onClick={() => window.location.href = 'http://15.164.225.85:8080/oauth2/authorization/google'}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-[14px] font-medium text-ink-900 hover:bg-gray-50">
             <span className="text-[15px] font-bold text-[#4285F4]">G</span>
             Google로 계속하기
           </button>
-          <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-[#FEE500] py-3 text-[14px] font-medium text-[#191600] hover:brightness-95">
+          <button 
+            type="button"
+            onClick={() => window.location.href = 'http://15.164.225.85:8080/oauth2/authorization/kakao'}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-[#FEE500] py-3 text-[14px] font-medium text-[#191600] hover:brightness-95">
             카카오로 계속하기
           </button>
-          <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-[14px] font-medium text-ink-900 hover:bg-gray-50">
+          <button 
+            type="button"
+            onClick={() => alert('Apple 로그인은 현재 준비 중입니다.')}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-[14px] font-medium text-ink-900 hover:bg-gray-50">
             Apple로 계속하기
           </button>
         </div>
