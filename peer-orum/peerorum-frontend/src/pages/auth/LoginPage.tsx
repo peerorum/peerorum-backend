@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../layouts/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
 
@@ -7,7 +7,6 @@ const ADMIN_EMAIL = 'admin@peeroreum.com'
 
 export default function LoginPage() {
   const { login } = useAuth()
-  const { open: openSignupModal } = useSignupModal()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
 
@@ -50,21 +49,11 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          {errorMessage && (
-            <p
-              role="alert"
-              className="rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-600"
-            >
-              {errorMessage}
-            </p>
-          )}
-
           <button
             type="submit"
-            disabled={isSubmitting}
             className="mt-1 w-full rounded-xl bg-blue-600 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting ? '로그인 중...' : '로그인'}
+            로그인
           </button>
         </form>
 
