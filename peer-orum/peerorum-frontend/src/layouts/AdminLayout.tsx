@@ -4,11 +4,8 @@ import {
   Activity,
   Ban,
   BarChart3,
-  Bell,
   Briefcase,
-  ChevronDown,
   CreditCard,
-  Flag,
   Home,
   LogOut,
   Megaphone,
@@ -42,7 +39,6 @@ const NAV_GROUPS: { label: string | null; items: NavItem[] }[] = [
     label: '콘텐츠 관리',
     items: [
       { label: '스펙 카드 관리', to: '/admin/spec-cards', icon: CreditCard },
-      { label: '신고 관리', to: '/admin/reports', icon: Flag },
       { label: '공지사항 관리', to: '/admin/notices', icon: Megaphone },
     ],
   },
@@ -122,16 +118,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-16 shrink-0 items-center justify-end gap-5 border-b border-gray-100 bg-white px-8">
-          <button
-            type="button"
-            aria-label="알림"
-            className="relative text-gray-400 hover:text-gray-600"
-          >
-            <Bell className="h-5 w-5" />
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
-              3
-            </span>
-          </button>
           <div className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500">
               <User className="h-4 w-4" />
@@ -140,7 +126,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <p className="font-semibold text-ink-900">관리자</p>
               <p className="text-gray-400">admin@peeroreum.com</p>
             </div>
-            <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
           </div>
         </header>
 

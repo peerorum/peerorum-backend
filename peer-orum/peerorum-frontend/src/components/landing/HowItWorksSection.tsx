@@ -1,27 +1,31 @@
-import { UserCheck, FolderUp, Search, Users, ShieldCheck } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
+import howtoSignup from '../../assets/images/howto-signup.png'
+import howtoRegister from '../../assets/images/howto-register.png'
+import howtoCondition from '../../assets/images/howto-condition.png'
+import howtoCompare from '../../assets/images/howto-compare.png'
 
 const STEPS = [
   {
     number: '01',
-    icon: UserCheck,
+    icon: howtoSignup,
     title: '회원가입 및 인증',
     description: '학교 인증을 통해 안전하게 가입합니다.',
   },
   {
     number: '02',
-    icon: FolderUp,
+    icon: howtoRegister,
     title: '내 스펙 등록',
     description: '학점, 어학, 자격증 등 스펙 정보를 등록하고 관리합니다.',
   },
   {
     number: '03',
-    icon: Search,
+    icon: howtoCondition,
     title: '비교 조건 설정',
     description: '학교, 학과, 학년, 직무 등 원하는 조건을 선택합니다.',
   },
   {
     number: '04',
-    icon: Users,
+    icon: howtoCompare,
     title: '익명 스펙 비교',
     description: '같은 조건의 학생들과 익명으로 스펙을 비교하세요.',
   },
@@ -45,7 +49,7 @@ export default function HowItWorksSection() {
             <div key={step.number} className="text-center">
               <span className="text-[14px] font-bold text-blue-400">{step.number}</span>
               <div className="mx-auto mt-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-ink-850 border border-ink-700">
-                <step.icon className="h-7 w-7 text-blue-400" />
+                <img src={step.icon} alt="" width={190} height={190} className="h-10 w-10 object-contain" />
               </div>
               <h3 className="mt-5 text-[16px] font-bold text-white">{step.title}</h3>
               <p className="mt-2 text-[13.5px] leading-relaxed text-gray-400">

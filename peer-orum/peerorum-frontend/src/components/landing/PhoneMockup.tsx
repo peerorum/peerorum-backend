@@ -1,4 +1,4 @@
-import { Bell, GraduationCap, Globe2, Award, Briefcase } from 'lucide-react'
+import { GraduationCap, Globe2, Award, Briefcase } from 'lucide-react'
 import Logo from '../ui/Logo'
 
 const STATS = [
@@ -44,9 +44,8 @@ export default function PhoneMockup() {
         <span className="tracking-widest">●●●</span>
       </div>
 
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center px-4 py-3">
         <Logo className="h-4" />
-        <Bell className="h-4 w-4 text-gray-400" />
       </div>
 
       <div className="mx-3 mb-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">

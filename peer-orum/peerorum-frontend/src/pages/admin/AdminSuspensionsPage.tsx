@@ -1,7 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Download, MoreVertical, Search } from 'lucide-react'
 import AdminLayout from '../../layouts/AdminLayout'
-import { fetchAdminSuspensions, type AdminSuspensionData } from '../../api/admin'
+import { ADMIN_SUSPENSIONS } from '../../data/mockAdmin'
+
+const TABS = [
+  { key: 'all', label: '전체', count: 146 },
+  { key: 'suspend', label: '정지 요청', count: 38 },
+  { key: 'withdraw', label: '탈퇴 요청', count: 27 },
+  { key: 'done', label: '처리 완료', count: 81 },
+] as const
 
 const TYPE_STYLE: Record<string, string> = {
   정지: 'bg-rose-50 text-rose-600',
@@ -15,34 +22,7 @@ const STATUS_STYLE: Record<string, string> = {
 }
 
 export default function AdminSuspensionsPage() {
-  const [activeTab, setActiveTab] = useState('suspend')
-  const [suspensions, setSuspensions] = useState<AdminSuspensionData[]>([])
-
-  useEffect(() => {
-    fetchAdminSuspensions().then(data => setSuspensions(data.suspensions)).catch(console.error)
-  }, [])
-
-  const counts = {
-    all: suspensions.length,
-    suspend: suspensions.filter(s => s.type === '정지' && s.status !== '처리 완료').length,
-    withdraw: suspensions.filter(s => s.type === '탈퇴' && s.status !== '처리 완료').length,
-    done: suspensions.filter(s => s.status === '처리 완료').length,
-  }
-
-  const TABS = [
-    { key: 'all', label: '전체', count: counts.all },
-    { key: 'suspend', label: '정지 요청', count: counts.suspend },
-    { key: 'withdraw', label: '탈퇴 요청', count: counts.withdraw },
-    { key: 'done', label: '처리 완료', count: counts.done },
-  ] as const
-
-  const filteredData = suspensions.filter(s => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'suspend') return s.type === '정지' && s.status !== '처리 완료';
-    if (activeTab === 'withdraw') return s.type === '탈퇴' && s.status !== '처리 완료';
-    if (activeTab === 'done') return s.status === '처리 완료';
-    return true;
-  })
+  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]['key']>('suspend')
 
   return (
     <AdminLayout>
@@ -127,13 +107,7 @@ export default function AdminSuspensionsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-sm text-gray-500">
-                    요청 내역이 없습니다.
-                  </td>
-                </tr>
-              ) : filteredData.map((row) => {
+              {ADMIN_SUSPENSIONS.map((row) => {
                 const isDone = row.status === '처리 완료'
                 const secondaryLabel = row.type === '정지' ? '반려' : '보류'
                 return (
@@ -201,7 +175,7 @@ export default function AdminSuspensionsPage() {
         </div>
 
         <div className="flex items-center justify-between px-5 py-4">
-          <span className="text-[12.5px] text-gray-400">전체 {filteredData.length}건</span>
+          <span className="text-[12.5px] text-gray-400">전체 38건</span>
           <div className="flex items-center gap-1.5">
             <button
               type="button"

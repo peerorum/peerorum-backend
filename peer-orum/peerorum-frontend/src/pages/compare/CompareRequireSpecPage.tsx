@@ -18,7 +18,7 @@ export default function CompareRequireSpecPage() {
   const { isLoggedIn } = useAuth()
 
   const handleRegisterClick = () => {
-    navigate(isLoggedIn ? '/mypage/specs/register' : '/login')
+    navigate(isLoggedIn ? '/mypage/specs' : '/login')
   }
 
   return (
@@ -67,9 +67,6 @@ export default function CompareRequireSpecPage() {
               className="rounded-xl bg-blue-600 px-6 py-3 text-[14.5px] font-semibold text-white transition-colors hover:bg-blue-700"
             >
               내 스펙 등록하기
-            </button>
-            <button className="rounded-xl border border-gray-200 px-6 py-3 text-[14.5px] font-semibold text-ink-900 hover:bg-gray-50">
-              기존 스펙 불러오기
             </button>
           </div>
         </div>

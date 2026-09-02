@@ -15,10 +15,12 @@ export default function Modal({
   useEffect(() => {
     if (!open) return
 
-    // index.css reserves the scrollbar gutter permanently
-    // (`scrollbar-gutter: stable` on :root), so hiding the scrollbar here
-    // never changes the page's width — no extra compensation needed.
+    // Hiding the scrollbar here would otherwise widen the page by the
+    // scrollbar's own width, causing a visible layout shift. Measure it
+    // and compensate with padding so the page underneath never reflows.
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
     document.body.style.overflow = 'hidden'
+    document.body.style.paddingRight = `${scrollbarWidth}px`
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -27,6 +29,7 @@ export default function Modal({
 
     return () => {
       document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
       window.removeEventListener('keydown', onKeyDown)
     }
   }, [open, onClose])

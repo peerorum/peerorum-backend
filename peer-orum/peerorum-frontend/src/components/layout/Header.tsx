@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Logo from '../ui/Logo'
 import ProfileMenu from './ProfileMenu'
 import { useAuth } from '../../context/AuthContext'
+import { scrollToSection } from '../../utils/scroll'
 
 const NAV_ITEMS = [
   { label: '스펙 비교', href: '/compare' },
@@ -48,7 +49,7 @@ export default function Header() {
     const id = href.split('#')[1]
     if (location.pathname === '/') {
       e.preventDefault()
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+      scrollToSection(id)
     } else {
       e.preventDefault()
       navigate(`/#${id}`)
@@ -77,31 +78,27 @@ export default function Header() {
                 ? activeSection === sectionId
                 : location.pathname === item.href
 
-            if (sectionId) {
+            const linkClassName = `text-[15px] font-medium transition-colors ${
+              isActive ? 'text-blue-600' : 'text-gray-600 hover:text-ink-900'
+            }`
+
+            if (sectionId === null) {
               return (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  onClick={(e) => handleSectionClick(e, item.href)}
-                  className={`text-[15px] font-medium transition-colors ${
-                    isActive ? 'text-blue-600' : 'text-gray-600 hover:text-ink-900'
-                  }`}
-                >
+                <Link key={item.label} to={item.href} className={linkClassName}>
                   {item.label}
-                </a>
+                </Link>
               )
             }
 
             return (
-              <Link
+              <a
                 key={item.label}
-                to={item.href}
-                className={`text-[15px] font-medium transition-colors ${
-                  isActive ? 'text-blue-600' : 'text-gray-600 hover:text-ink-900'
-                }`}
+                href={item.href}
+                onClick={(e) => handleSectionClick(e, item.href)}
+                className={linkClassName}
               >
                 {item.label}
-              </Link>
+              </a>
             )
           })}
         </nav>
