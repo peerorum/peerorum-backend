@@ -31,6 +31,9 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private String providerId;
 
+    @Column(name = "password_hash")
+    private String passwordHash;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
@@ -43,11 +46,20 @@ public class User extends BaseTimeEntity {
     private String virtualNickname;
 
     @Builder
-    public User(String email, String name, Provider provider, String providerId, Role role, String virtualNickname) {
+    public User(
+            String email,
+            String name,
+            Provider provider,
+            String providerId,
+            String passwordHash,
+            Role role,
+            String virtualNickname
+    ) {
         this.email = email;
         this.name = name;
         this.provider = provider;
         this.providerId = providerId;
+        this.passwordHash = passwordHash;
         this.role = role;
         this.anonymousUuid = UUID.randomUUID().toString();
         this.virtualNickname = virtualNickname;

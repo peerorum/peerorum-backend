@@ -5,6 +5,14 @@
       "destination": "http://15.164.225.85:8080/api/$1"
     },
     {
+      "source": "/oauth2/authorization/(.*)",
+      "destination": "http://15.164.225.85:8080/oauth2/authorization/$1"
+    },
+    {
+      "source": "/login/oauth2/(.*)",
+      "destination": "http://15.164.225.85:8080/login/oauth2/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

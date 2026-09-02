@@ -19,6 +19,9 @@ public enum ErrorCode {
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "Unauthorized"),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A002", "Invalid Token"),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A003", "Expired Token"),
+    EMAIL_ALREADY_REGISTERED(HttpStatus.CONFLICT, "A004", "이미 가입된 이메일입니다."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A005", "이메일 또는 비밀번호가 올바르지 않습니다."),
+    ACCOUNT_PROVIDER_MISMATCH(HttpStatus.CONFLICT, "A006", "다른 방식으로 가입된 이메일입니다."),
 
     // AI
     GEMINI_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI001", "Gemini API Integration Error");

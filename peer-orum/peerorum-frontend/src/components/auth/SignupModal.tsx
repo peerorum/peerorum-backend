@@ -18,6 +18,12 @@ import Stepper from '../ui/Stepper'
 import { useSignupModal } from '../../context/SignupModalContext'
 import { useAuth } from '../../context/AuthContext'
 import { api } from '../../api/axios'
+import {
+  clearAuthenticationSession,
+  getApiErrorMessage,
+  refreshAuthentication,
+  saveAuthenticationSession,
+} from '../../api/auth'
 
 type Step = 'intro' | 'basic' | 'compare' | 'terms' | 'complete'
 
@@ -118,6 +124,7 @@ export default function SignupModal() {
   const [major, setMajor] = useState('')
   const [desiredJob, setDesiredJob] = useState('')
   const [majors, setMajors] = useState<string[]>([])
+  const [isCompleting, setIsCompleting] = useState(false)
   const [checked, setChecked] = useState<Record<string, boolean>>({
     service: true,
     privacy: true,
@@ -127,7 +134,7 @@ export default function SignupModal() {
   useEffect(() => {
     if (isOpen) {
       setStep(initialStep)
-      fetch('http://localhost:8080/api/majors')
+      fetch('/api/majors')
         .then((res) => res.json())
         .then((data) => setMajors(data))
         .catch((err) => console.error('Failed to fetch majors', err))
@@ -141,14 +148,14 @@ export default function SignupModal() {
   }
 
   const handleComplete = async () => {
+    setIsCompleting(true)
+
     try {
-      // Create profile via API
-      let entranceYear = 2024
-      if (grade === '1학년') entranceYear = 2024
-      else if (grade === '2학년') entranceYear = 2023
-      else if (grade === '3학년') entranceYear = 2022
-      else if (grade === '4학년') entranceYear = 2021
-      else entranceYear = 2020
+      const currentYear = new Date().getFullYear()
+      const gradeNumber = Number.parseInt(grade, 10)
+      const entranceYear = Number.isNaN(gradeNumber)
+        ? currentYear - 4
+        : currentYear - gradeNumber + 1
 
       await api.post('/profiles', {
         university,
@@ -156,10 +163,35 @@ export default function SignupModal() {
         entranceYear,
         desiredJob,
       })
+
+      try {
+        const session = await refreshAuthentication()
+        saveAuthenticationSession(session)
+        login({
+          name: session.name,
+          role: session.role,
+          hasSpec: false,
+        })
+      } catch (refreshError) {
+        console.error('Failed to refresh session', refreshError)
+        clearAuthenticationSession()
+        close()
+        alert('프로필은 저장되었지만 로그인 상태를 갱신하지 못했습니다. 다시 로그인해주세요.')
+        navigate('/login')
+        return
+      }
+
       setStep('complete')
-    } catch (err) {
-      console.error('Failed to create profile', err)
-      alert('프로필 생성에 실패했습니다.')
+    } catch (error) {
+      console.error('Failed to create profile', error)
+      alert(
+        getApiErrorMessage(
+          error,
+          '프로필 생성에 실패했습니다. 잠시 후 다시 시도해주세요.',
+        ),
+      )
+    } finally {
+      setIsCompleting(false)
     }
   }
 
@@ -482,11 +514,11 @@ export default function SignupModal() {
             </button>
             <button
               type="button"
-              disabled={!allChecked}
+              disabled={!allChecked || isCompleting}
               onClick={handleComplete}
               className="w-full rounded-xl bg-blue-600 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              다음
+              {isCompleting ? '저장 중...' : '다음'}
             </button>
           </div>
 
