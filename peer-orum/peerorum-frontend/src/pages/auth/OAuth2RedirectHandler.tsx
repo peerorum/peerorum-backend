@@ -43,7 +43,7 @@ export default function OAuth2RedirectHandler() {
 
     login({
       name: 'User',
-      role: normalizedRole,
+      role: normalizedRole === 'ROLE_ADMIN' ? 'admin' : 'user',
       hasSpec: normalizedRole !== 'ROLE_GUEST',
     })
 
