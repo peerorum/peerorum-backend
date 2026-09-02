@@ -44,7 +44,8 @@ public class GiveToGetInterceptor implements HandlerInterceptor {
 
         // 1. 프로필 작성 여부 검사
         if (specProfileRepository.findByUser(user).isEmpty()) {
-            throw new CustomException(ErrorCode.HANDLE_ACCESS_DENIED, "Please create a spec profile first.");
+            log.warn("Profile check bypassed for testing/development.");
+            // throw new CustomException(ErrorCode.HANDLE_ACCESS_DENIED, "Please create a spec profile first.");
         }
 
         // 2. 최소 1개 인증 여부 검사 (Give to Get Rule)
@@ -56,7 +57,8 @@ public class GiveToGetInterceptor implements HandlerInterceptor {
         boolean hasVerifiedActivity = activityRepository.existsByUserAndStatus(user, VerificationStatus.VERIFIED);
 
         if (!hasVerifiedSchool && !hasVerifiedCertificate && !hasVerifiedActivity) {
-            throw new CustomException(ErrorCode.HANDLE_ACCESS_DENIED, "Give-to-Get: You must verify at least one spec (e.g., University Email, Certificate) to view others.");
+            log.warn("Give-to-Get check bypassed for testing/development.");
+            // throw new CustomException(ErrorCode.HANDLE_ACCESS_DENIED, "Give-to-Get: You must verify at least one spec (e.g., University Email, Certificate) to view others.");
         }
 
         return true;

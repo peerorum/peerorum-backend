@@ -55,12 +55,6 @@ export default function FeedbackSection() {
               피드백 남기기
               <ArrowRight className="h-4 w-4" />
             </button>
-            <a
-              href="#"
-              className="rounded-full border border-gray-200 bg-white px-6 py-3.5 text-[15px] font-semibold text-ink-900 transition-colors hover:bg-gray-100"
-            >
-              개선 현황 보기
-            </a>
           </div>
 
           <div className="mt-6 flex items-center gap-1.5 text-[13px] text-gray-400">
@@ -69,7 +63,7 @@ export default function FeedbackSection() {
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative block">
           <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xl shadow-black/[0.03]">
             <div className="mb-4 flex gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-red-300" />
@@ -84,14 +78,14 @@ export default function FeedbackSection() {
 
             <div className="mt-4 flex gap-2">
               {TABS.map((tab, i) => (
-                <button
+                <span
                   key={tab}
                   className={`rounded-full px-3.5 py-1.5 text-[12.5px] font-medium ${
                     i === 0 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'
                   }`}
                 >
                   {tab}
-                </button>
+                </span>
               ))}
             </div>
 

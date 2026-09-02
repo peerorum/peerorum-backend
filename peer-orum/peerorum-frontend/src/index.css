@@ -27,9 +27,13 @@
 
 :root {
   color-scheme: light;
-  /* Reserve the scrollbar's width permanently so opening a modal
-     (which hides the scrollbar) never reflows the page underneath it. */
-  scrollbar-gutter: stable;
+  /* A classic (non-overlay) scrollbar reserves its own track outside the
+     document's content box, so its default color shows through instead of
+     whatever the page underneath looks like — most visible as a pale seam
+     next to the dark footer. Thinning it and giving it a neutral color
+     keeps that seam from reading as a stray white line. */
+  scrollbar-width: thin;
+  scrollbar-color: #c7cbd3 #eef0f3;
 }
 
 body {
@@ -38,6 +42,26 @@ body {
   color: #1f2430;
   cursor: default;
   font-family: var(--font-sans);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #eef0f3;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #c7cbd3;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #9aa1ac;
+  background-clip: padding-box;
 }
 
 /* Make plain text unselectable by default, regardless of inheritance,

@@ -22,14 +22,6 @@ export const RECENT_SIGNUPS = [
   { name: '최스펙', handle: '@spec_choi', time: '31분 전' },
 ]
 
-export const RECENT_REPORTS = [
-  { title: '부적절한 스펙 내용', reporter: '@user123', time: '5분 전', status: '처리 대기' as const },
-  { title: '홍보/광고 내용', reporter: '@user456', time: '15분 전', status: '처리 중' as const },
-  { title: '욕설/비방', reporter: '@user789', time: '32분 전', status: '처리 완료' as const },
-  { title: '개인정보 노출', reporter: '@user321', time: '1시간 전', status: '처리 완료' as const },
-  { title: '기타', reporter: '@user654', time: '2시간 전', status: '처리 완료' as const },
-]
-
 export const ADMIN_USERS = [
   { name: '김민준', id: 'minjun_kim', school: '서울대학교', major: '컴퓨터공학부', grade: '3학년', joinedAt: '2025.05.19', status: '활성' as const, verified: '인증완료' as const },
   { name: '이서연', id: 'seoyeon_lee', school: '연세대학교', major: '경영학과', grade: '2학년', joinedAt: '2025.05.18', status: '활성' as const, verified: '인증완료' as const },

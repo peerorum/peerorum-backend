@@ -1,23 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Award,
   Briefcase,
+  Building2,
   FileEdit,
+  FileText,
   GraduationCap,
   Globe2,
-  History,
-  Plus,
-  Settings2,
+  Target,
   Trophy,
   Users,
 } from 'lucide-react'
 import MyPageLayout from '../../layouts/MyPageLayout'
 import PenguinMascot from '../../components/ui/PenguinMascot'
 import PenguinHero from '../../components/ui/PenguinHero'
+import RankPagination from '../../components/compare/RankPagination'
 import { useAuth } from '../../context/AuthContext'
-import { fetchMyProfile } from '../../api/profile'
-import type { MyProfileData } from '../../api/profile'
+
+const PROFILE_FIELDS = [
+  { icon: Building2, label: '학교', value: '단국대학교' },
+  { icon: FileText, label: '학과', value: '경영학과' },
+  { icon: GraduationCap, label: '학년', value: '4학년' },
+  { icon: Target, label: '희망 직무', value: '마케팅' },
+  { icon: Award, label: '전공 학점', value: '4.35 / 4.5' },
+  { icon: Award, label: '평균 학점', value: '4.29 / 4.5' },
+]
 
 const REGISTERABLE_ITEMS = [
   { icon: GraduationCap, label: '학점', description: '재학중이거나 1학년일 경우 학점을 등록해요.' },
@@ -28,84 +36,217 @@ const REGISTERABLE_ITEMS = [
   { icon: Trophy, label: '수상', description: '수상 내역과 성과를 등록해요.' },
 ]
 
+const SUMMARY_STATS = [
+  { icon: Globe2, label: '어학', value: 'TOEIC 780' },
+  { icon: Award, label: '자격증', value: '4개' },
+  { icon: Briefcase, label: '대외활동', value: '3회' },
+  { icon: Users, label: '인턴', value: '1회' },
+  { icon: Trophy, label: '수상', value: '1회' },
+]
+
+const CERTS = [
+  { name: 'ADsP', date: '2024.05.10' },
+  { name: '컴퓨터활용능력 2급', date: '2023.09.15' },
+  { name: 'SQLD', date: '2024.01.20' },
+  { name: '무역영어 1급', date: '2023.12.05' },
+  { name: 'GTQ 1급', date: '2023.06.20' },
+]
+const CERTS_PAGE_SIZE = 6
+
+const ACTIVITIES = [
+  { name: '교내 마케팅 서포터즈 3기', period: '2024.03 - 2024.11' },
+  { name: '한국경제 대학생 기자단 21기', period: '2023.09 - 2024.02' },
+  { name: '대학 연합 마케팅 컨퍼런스 운영진', period: '2023.05 - 2023.11' },
+]
+const ACTIVITIES_PAGE_SIZE = 4
+
+const INTERNSHIPS = [
+  {
+    company: 'ABC 마케팅 인턴',
+    period: '2024.06 - 2024.08',
+    tasks: ['SNS 콘텐츠 기획 및 운영', '시장 조사 및 경쟁사 분석', '프로모션 성과 분석 및 리포트 제작'],
+  },
+  {
+    company: 'XYZ 브랜드전략팀 인턴',
+    period: '2023.12 - 2024.02',
+    tasks: ['시장 트렌드 리서치', 'SNS 채널 운영 지원', '브랜드 캠페인 기획 보조'],
+  },
+]
+
+const AWARDS = [
+  {
+    title: '마케팅 아이디어 공모전 장려상',
+    date: '2024.06',
+    details: ['주최: 한국마케팅협회', '수상작: 대학생 잠재고객 브랜드 캠페인 제안'],
+  },
+  {
+    title: '대학생 브랜드 마케팅 챌린지 우수상',
+    date: '2023.11',
+    details: ['주최: 대한마케팅학회', '수상작: SNS 바이럴 캠페인 기획안'],
+  },
+]
+
 function DetailCard({
   icon: Icon,
   title,
-  onAdd,
+  pagination,
   children,
 }: {
   icon: typeof GraduationCap
   title: string
-  onAdd?: boolean
+  pagination?: React.ReactNode
   children: React.ReactNode
 }) {
-  return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm shadow-black/[0.02]">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-            <Icon className="h-4 w-4" />
-          </span>
-          <h3 className="text-[14.5px] font-bold text-ink-900">{title}</h3>
-        </div>
-        {onAdd && (
-          <button className="flex items-center gap-1 text-[12.5px] font-semibold text-blue-600 hover:underline">
-            <Plus className="h-3.5 w-3.5" />
-            추가하기
-          </button>
-        )}
+  const header = (
+    <div className="mb-4 flex items-center gap-2">
+      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+        <Icon className="h-4 w-4" />
+      </span>
+      <h3 className="text-[14.5px] font-bold text-ink-900">{title}</h3>
+    </div>
+  )
+
+  if (!pagination) {
+    return (
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm shadow-black/[0.02]">
+        {header}
+        {children}
       </div>
-      {children}
+    )
+  }
+
+  return (
+    <div className="flex h-72 flex-col rounded-2xl border border-gray-100 bg-white p-5 pb-3 shadow-sm shadow-black/[0.02]">
+      {header}
+      <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+      {pagination}
     </div>
   )
 }
 
+function CertsCard() {
+  const [page, setPage] = useState(1)
+  const totalPages = Math.max(1, Math.ceil(CERTS.length / CERTS_PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const items = CERTS.slice((currentPage - 1) * CERTS_PAGE_SIZE, currentPage * CERTS_PAGE_SIZE)
+
+  return (
+    <DetailCard
+      icon={Award}
+      title="자격증"
+      pagination={
+        <RankPagination currentPage={currentPage} totalPages={totalPages} onChange={setPage} />
+      }
+    >
+      <ul className="flex flex-col gap-2.5">
+        {items.map((cert) => (
+          <li key={cert.name} className="flex items-center justify-between text-[13.5px]">
+            <span className="font-medium text-ink-900">{cert.name}</span>
+            <span className="text-gray-400">{cert.date}</span>
+          </li>
+        ))}
+      </ul>
+    </DetailCard>
+  )
+}
+
+function ActivitiesCard() {
+  const [page, setPage] = useState(1)
+  const totalPages = Math.max(1, Math.ceil(ACTIVITIES.length / ACTIVITIES_PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const items = ACTIVITIES.slice(
+    (currentPage - 1) * ACTIVITIES_PAGE_SIZE,
+    currentPage * ACTIVITIES_PAGE_SIZE,
+  )
+
+  return (
+    <DetailCard
+      icon={Briefcase}
+      title="대외활동"
+      pagination={
+        <RankPagination currentPage={currentPage} totalPages={totalPages} onChange={setPage} />
+      }
+    >
+      <ul className="flex flex-col gap-2.5">
+        {items.map((activity) => (
+          <li key={activity.name} className="text-[13.5px]">
+            <p className="font-medium text-ink-900">{activity.name}</p>
+            <p className="text-[12px] text-gray-400">{activity.period}</p>
+          </li>
+        ))}
+      </ul>
+    </DetailCard>
+  )
+}
+
+function InternshipsCard() {
+  const [page, setPage] = useState(1)
+  const totalPages = INTERNSHIPS.length
+  const currentPage = Math.min(page, totalPages)
+  const intern = INTERNSHIPS[currentPage - 1]
+
+  return (
+    <DetailCard
+      icon={Users}
+      title="인턴 경험"
+      pagination={
+        <RankPagination currentPage={currentPage} totalPages={totalPages} onChange={setPage} />
+      }
+    >
+      <p className="text-[13.5px] font-medium text-ink-900">{intern.company}</p>
+      <p className="text-[12px] text-gray-400">{intern.period}</p>
+      <ul className="mt-2.5 flex flex-col gap-1.5">
+        {intern.tasks.map((task) => (
+          <li key={task} className="flex gap-1.5 text-[12.5px] text-gray-500">
+            <span>·</span>
+            {task}
+          </li>
+        ))}
+      </ul>
+    </DetailCard>
+  )
+}
+
+function AwardsCard() {
+  const [page, setPage] = useState(1)
+  const totalPages = AWARDS.length
+  const currentPage = Math.min(page, totalPages)
+  const award = AWARDS[currentPage - 1]
+
+  return (
+    <DetailCard
+      icon={Trophy}
+      title="수상"
+      pagination={
+        <RankPagination currentPage={currentPage} totalPages={totalPages} onChange={setPage} />
+      }
+    >
+      <p className="text-[13.5px] font-medium text-ink-900">{award.title}</p>
+      <p className="text-[12px] text-gray-400">{award.date}</p>
+      <ul className="mt-2.5 flex flex-col gap-1.5">
+        {award.details.map((detail) => (
+          <li key={detail} className="flex gap-1.5 text-[12.5px] text-gray-500">
+            <span>·</span>
+            {detail}
+          </li>
+        ))}
+      </ul>
+    </DetailCard>
+  )
+}
+
 export default function MySpecsPage() {
-  const { user, setHasSpec } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
-  const [profile, setProfile] = useState<MyProfileData | null>(null)
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchMyProfile()
-      .then((data) => {
-        setProfile(data)
-        setHasSpec(true)
-      })
-      .catch((err) => {
-        console.error(err)
-        setHasSpec(false)
-      })
-      .finally(() => setLoading(false))
-  }, [setHasSpec])
-
-  if (loading) {
+  if (!user?.hasSpec) {
     return (
       <MyPageLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500">데이터를 불러오는 중입니다...</p>
-        </div>
-      </MyPageLayout>
-    )
-  }
-
-  if (!user?.hasSpec || !profile) {
-    return (
-      <MyPageLayout>
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-[22px] font-bold text-ink-900">내 스펙</h1>
-            <p className="mt-1 text-[13.5px] text-gray-500">
-              등록한 스펙을 관리하고, 성장 과정을 한눈에 확인해보세요.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 px-3.5 py-2 text-[13px] font-medium text-ink-900 hover:bg-gray-50"
-          >
-            <Settings2 className="h-3.5 w-3.5" />
-            스펙 공개 설정
-          </button>
+        <div>
+          <h1 className="text-[22px] font-bold text-ink-900">내 스펙</h1>
+          <p className="mt-1 text-[13.5px] text-gray-500">
+            등록한 스펙을 관리하고, 성장 과정을 한눈에 확인해보세요.
+          </p>
         </div>
 
         <div className="mt-5 rounded-2xl border border-gray-100 bg-white p-10 text-center shadow-sm shadow-black/[0.02]">
@@ -145,15 +286,6 @@ export default function MySpecsPage() {
     )
   }
 
-  const SUMMARY_STATS = [
-    { icon: GraduationCap, label: '학점', value: profile.gpa ? `${profile.gpa} / 4.5` : '-', percentile: '' },
-    { icon: Globe2, label: '어학', value: profile.toeicScore ? `TOEIC ${profile.toeicScore}` : '-', percentile: '' },
-    { icon: Award, label: '자격증', value: `${profile.certificates?.length || 0}개` },
-    { icon: Briefcase, label: '대외활동', value: `${profile.activities?.length || 0}회` },
-    { icon: Users, label: '인턴', value: '0회' }, // Placeholder as backend has no Intern entity yet
-    { icon: Trophy, label: '수상', value: '0회' }, // Placeholder as backend has no Trophy entity yet
-  ]
-
   return (
     <MyPageLayout>
       <div className="flex items-start justify-between">
@@ -164,10 +296,6 @@ export default function MySpecsPage() {
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
-          <button className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3.5 py-2 text-[13px] font-medium text-ink-900 hover:bg-gray-50">
-            <Settings2 className="h-3.5 w-3.5" />
-            스펙 공개 설정
-          </button>
           <button
             onClick={() => navigate('/mypage/specs/edit')}
             className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-blue-700"
@@ -182,16 +310,28 @@ export default function MySpecsPage() {
         <div className="flex items-center gap-4">
           <PenguinMascot className="h-14 w-14" />
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[16px] font-bold text-ink-900">{profile.name}</span>
-            </div>
+            <span className="text-[16px] font-bold text-ink-900">유경</span>
             <p className="mt-0.5 text-[13px] text-gray-500">
-              {profile.university} {profile.major} {profile.entranceYear ? `${profile.entranceYear}학번` : ''} · {profile.desiredJob} 희망
+              단국대학교 경영학과 4학년 · 마케팅 희망
             </p>
           </div>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-4 border-t border-gray-100 pt-5 sm:grid-cols-3 lg:grid-cols-6">
+          {PROFILE_FIELDS.map((field) => (
+            <div key={field.label} className="flex items-center gap-2">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-50 text-gray-500">
+                <field.icon className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-[11.5px] text-gray-400">{field.label}</p>
+                <p className="text-[13px] font-bold text-ink-900">{field.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-4 border-t border-gray-100 pt-5 sm:grid-cols-3 lg:grid-cols-5">
           {SUMMARY_STATS.map((stat) => (
             <div key={stat.label} className="flex items-center gap-2">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-50 text-gray-500">
@@ -200,9 +340,6 @@ export default function MySpecsPage() {
               <div>
                 <p className="text-[11.5px] text-gray-400">{stat.label}</p>
                 <p className="text-[13px] font-bold text-ink-900">{stat.value}</p>
-                {stat.percentile && (
-                  <p className="text-[10.5px] text-blue-600">{stat.percentile}</p>
-                )}
               </div>
             </div>
           ))}
@@ -214,107 +351,41 @@ export default function MySpecsPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <DetailCard icon={GraduationCap} title="학업">
           <div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-[20px] font-bold text-ink-900">{profile.gpa ? profile.gpa : 0} / 4.5</span>
-            </div>
+            <span className="text-[20px] font-bold text-ink-900">4.29 / 4.5</span>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
-              <div
-                className="h-full rounded-full bg-blue-600"
-                style={{ width: `${((profile.gpa || 0) / 4.5) * 100}%` }}
-              />
+              <div className="h-full w-[95%] rounded-full bg-blue-600" />
             </div>
+            <p className="mt-1.5 text-[11.5px] text-gray-400">전공 평균 3.65 / 4.5</p>
           </div>
         </DetailCard>
 
         <DetailCard icon={Globe2} title="어학">
           <div className="flex flex-col gap-4">
             <div>
-              <div className="flex items-baseline justify-between">
-                <span className="text-[13px] font-medium text-gray-500">TOEIC</span>
-              </div>
+              <span className="text-[13px] font-medium text-gray-500">TOEIC</span>
               <div className="mt-1 flex items-center gap-2">
-                <span className="text-[18px] font-bold text-ink-900">{profile.toeicScore || '-'}</span>
+                <span className="text-[18px] font-bold text-ink-900">780</span>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
-                  <div
-                    className="h-full rounded-full bg-blue-600"
-                    style={{ width: `${((profile.toeicScore || 0) / 990) * 100}%` }}
-                  />
+                  <div className="h-full w-[78%] rounded-full bg-blue-600" />
                 </div>
               </div>
             </div>
             <div>
-              <div className="flex items-baseline justify-between">
-                <span className="text-[13px] font-medium text-gray-500">OPIc</span>
-              </div>
+              <span className="text-[13px] font-medium text-gray-500">OPIc</span>
               <div className="mt-1 flex items-center gap-2">
-                <span className="text-[18px] font-bold text-ink-900">{profile.opicGrade || '-'}</span>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-baseline justify-between">
-                <span className="text-[13px] font-medium text-gray-500">TOEIC Speaking</span>
-              </div>
-              <div className="mt-1 flex items-center gap-2">
-                <span className="text-[18px] font-bold text-ink-900">{profile.toeicSpeakingGrade || '-'}</span>
+                <span className="text-[18px] font-bold text-ink-900">IH</span>
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
+                  <div className="h-full w-[72%] rounded-full bg-blue-600" />
+                </div>
               </div>
             </div>
           </div>
         </DetailCard>
 
-        <DetailCard icon={Award} title="자격증" onAdd>
-          {profile.certificates?.length > 0 ? (
-            <ul className="flex flex-col gap-2.5">
-              {profile.certificates.map((cert) => (
-                <li key={cert.id} className="flex items-center justify-between text-[13.5px]">
-                  <span className="font-medium text-ink-900">{cert.certName}</span>
-                  <span className="text-gray-400">{cert.issueDate}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-[13px] text-gray-400 text-center py-4">등록된 자격증이 없습니다.</p>
-          )}
-        </DetailCard>
-
-        <DetailCard icon={Briefcase} title="대외활동" onAdd>
-          {profile.activities?.length > 0 ? (
-            <ul className="flex flex-col gap-2.5">
-              {profile.activities.map((activity) => (
-                <li key={activity.id} className="text-[13.5px]">
-                  <p className="font-medium text-ink-900">{activity.activityName}</p>
-                  <p className="text-[12px] text-gray-400">인증키: {activity.authKey}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-[13px] text-gray-400 text-center py-4">등록된 대외활동이 없습니다.</p>
-          )}
-        </DetailCard>
-
-        <DetailCard icon={Users} title="인턴 경험" onAdd>
-          <p className="text-[13px] text-gray-400 text-center py-4">등록된 인턴 경험이 없습니다.</p>
-        </DetailCard>
-
-        <DetailCard icon={Trophy} title="수상" onAdd>
-          <p className="text-[13px] text-gray-400 text-center py-4">등록된 수상 내역이 없습니다.</p>
-        </DetailCard>
-      </div>
-
-      <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-5 sm:flex-row sm:items-center">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-600">
-            <History className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="text-[14px] font-bold text-ink-900">나의 성장 기록</p>
-            <p className="text-[12.5px] text-gray-500">
-              스펙 등록 내역을 통해 성장 과정을 확인해보세요.
-            </p>
-          </div>
-        </div>
-        <button className="shrink-0 rounded-lg bg-white px-4 py-2.5 text-[13px] font-semibold text-ink-900 shadow-sm hover:bg-gray-100">
-          성장 기록 보기
-        </button>
+        <CertsCard />
+        <ActivitiesCard />
+        <InternshipsCard />
+        <AwardsCard />
       </div>
     </MyPageLayout>
   )

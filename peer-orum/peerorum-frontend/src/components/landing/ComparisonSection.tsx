@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { ListFilter, User } from 'lucide-react'
 
 const FILTERS = ['경영학과', '4학년', '마케팅 직무 희망']
@@ -45,10 +44,10 @@ export default function ComparisonSection() {
               {filter}
             </span>
           ))}
-          <button className="flex items-center gap-1.5 rounded-full bg-ink-900 px-4 py-2 text-[13px] font-semibold text-white">
+          <span className="flex items-center gap-1.5 rounded-full bg-ink-900 px-4 py-2 text-[13px] font-semibold text-white">
             <ListFilter className="h-3.5 w-3.5" />
             조건 변경
-          </button>
+          </span>
         </div>
 
         <div className="mt-8 overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm shadow-black/[0.02]">
@@ -89,12 +88,9 @@ export default function ComparisonSection() {
                   </td>
                   <td className="px-6 py-5 text-[14px] text-ink-900">{student.job}</td>
                   <td className="px-6 py-5">
-                    <Link
-                      to={`/compare/${student.id}`}
-                      className="inline-block rounded-full border border-gray-200 px-4 py-2 text-[13px] font-medium text-gray-600 hover:bg-gray-50"
-                    >
+                    <span className="inline-block rounded-full border border-gray-200 px-4 py-2 text-[13px] font-medium text-gray-600">
                       프로필 보기
-                    </Link>
+                    </span>
                   </td>
                 </tr>
               ))}

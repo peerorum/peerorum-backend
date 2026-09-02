@@ -1,8 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
 import Modal from '../ui/Modal'
-
-const FILE_OPTIONS = ['해당 없음', '스크린샷 첨부', '스펙 인증서류', '기타 파일']
 
 export default function FeedbackModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [message, setMessage] = useState('')
@@ -48,26 +45,6 @@ export default function FeedbackModal({ open, onClose }: { open: boolean; onClos
 
           <div className="mt-5">
             <label className="mb-1.5 block text-[13px] font-semibold text-ink-900">
-              관련 파일:
-            </label>
-            <div className="relative">
-              <select
-                defaultValue=""
-                className="w-full appearance-none rounded-xl border border-gray-200 px-4 py-3 text-[13.5px] text-gray-500 outline-none focus:border-blue-500"
-              >
-                <option value="" disabled>
-                  선택하기
-                </option>
-                {FILE_OPTIONS.map((option) => (
-                  <option key={option}>{option}</option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <label className="mb-1.5 block text-[13px] font-semibold text-ink-900">
               문의사항 (필수) <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -92,14 +69,6 @@ export default function FeedbackModal({ open, onClose }: { open: boolean; onClos
               className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[13.5px] outline-none placeholder:text-gray-400 focus:border-blue-500"
             />
           </div>
-
-          <p className="mt-3 text-[12px] text-gray-400">
-            환불 관련 문의는{' '}
-            <a href="#" className="font-medium text-blue-600 hover:underline">
-              환불 페이지 ↗
-            </a>{' '}
-            를 이용해 주세요.
-          </p>
 
           <div className="mt-6 flex justify-end gap-3">
             <button

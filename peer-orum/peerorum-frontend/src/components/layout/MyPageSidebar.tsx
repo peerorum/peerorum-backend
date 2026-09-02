@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Bell, FileText, LogOut, Settings, ShieldCheck } from 'lucide-react'
+import { FileText, LogOut, Settings, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 const PRIMARY_ITEMS = [
@@ -8,10 +8,7 @@ const PRIMARY_ITEMS = [
   { label: '인증 현황', to: '/mypage/verification', icon: ShieldCheck },
 ]
 
-const SECONDARY_ITEMS = [
-  { label: '계정 설정', to: '#', icon: Settings },
-  { label: '알림 설정', to: '#', icon: Bell },
-]
+const SECONDARY_ITEMS = [{ label: '계정 설정', to: '/mypage/settings/account', icon: Settings }]
 
 export default function MyPageSidebar({ footer }: { footer?: ReactNode }) {
   const { logout } = useAuth()

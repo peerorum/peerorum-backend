@@ -8,6 +8,7 @@ import ComparisonSection from '../components/landing/ComparisonSection'
 import HowItWorksSection from '../components/landing/HowItWorksSection'
 import FeedbackSection from '../components/landing/FeedbackSection'
 import CTASection from '../components/landing/CTASection'
+import { scrollToSection } from '../utils/scroll'
 
 export default function LandingPage() {
   const location = useLocation()
@@ -16,7 +17,7 @@ export default function LandingPage() {
     if (!location.hash) return
     const id = location.hash.slice(1)
     requestAnimationFrame(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+      scrollToSection(id)
     })
   }, [location.hash])
 
