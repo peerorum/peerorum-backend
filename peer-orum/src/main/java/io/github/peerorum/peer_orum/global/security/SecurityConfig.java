@@ -88,7 +88,12 @@ public class SecurityConfig {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        configuration.setAllowedOrigins(java.util.Arrays.asList("http://localhost:5173", "http://localhost:3000", "https://peerorum.vercel.app", "https://peerorum-git-fix-production-oauth-peeroreum.vercel.app"));
+        configuration.setAllowedOriginPatterns(java.util.Arrays.asList(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "https://peerorum.vercel.app",
+                "https://peerorum-*.vercel.app"
+        ));
         configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(java.util.Arrays.asList("*"));
         configuration.setAllowCredentials(true);
