@@ -10,4 +10,5 @@ public class ProfileCreateRequest {
     private String major;
     private Integer entranceYear;
     private String desiredJob;
+    private String nickname;
 }

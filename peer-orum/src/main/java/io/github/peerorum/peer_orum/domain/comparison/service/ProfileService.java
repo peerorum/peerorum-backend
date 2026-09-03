@@ -47,6 +47,10 @@ public class ProfileService {
                 .build();
 
         specProfileRepository.save(newProfile);
+        
+        if (request.getNickname() != null && !request.getNickname().trim().isEmpty()) {
+            user.updateVirtualNickname(request.getNickname());
+        }
         user.updateRole(Role.ROLE_USER);
     }
 

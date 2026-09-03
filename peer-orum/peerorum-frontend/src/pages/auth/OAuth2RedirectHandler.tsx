@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { useSignupModal } from '../../context/SignupModalContext'
+
 
 export default function OAuth2RedirectHandler() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { login } = useAuth()
-  const { open: openSignupModal } = useSignupModal()
+
 
   const handledRef = useRef(false)
 
@@ -43,13 +43,12 @@ export default function OAuth2RedirectHandler() {
 
     login({
       name: 'User',
-      role: normalizedRole,
+      role: normalizedRole === 'ROLE_ADMIN' ? 'admin' : 'user',
       hasSpec: normalizedRole !== 'ROLE_GUEST',
     })
 
     if (normalizedRole === 'ROLE_GUEST') {
-      openSignupModal('basic')
-      navigate('/compare', { replace: true })
+      navigate('/signup', { replace: true })
     } else if (normalizedRole === 'ROLE_ADMIN') {
       navigate('/admin', { replace: true })
     } else {
@@ -59,7 +58,6 @@ export default function OAuth2RedirectHandler() {
     searchParams,
     navigate,
     login,
-    openSignupModal,
   ])
 
   return (
