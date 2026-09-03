@@ -59,7 +59,7 @@ export function saveAuthenticationSession(
   localStorage.setItem('token', session.accessToken)
   localStorage.setItem('uuid', session.uuid)
   localStorage.setItem('role', session.role)
-  localStorage.setItem('name', session.name || 'User')
+  localStorage.setItem('name', session.name || '회원')
 }
 
 export function clearAuthenticationSession() {

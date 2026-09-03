@@ -1,0 +1,35 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:peerorum;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    defer-datasource-initialization: false
+
+  h2:
+    console:
+      enabled: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-google-client
+            client-secret: test-google-secret
+          kakao:
+            client-id: test-kakao-client
+            client-secret: test-kakao-secret
+
+jwt:
+  secret: test-only-jwt-secret-key-with-at-least-32-bytes-for-hs256
+  expiration: 3600000
+  refresh-expiration: 7200000
