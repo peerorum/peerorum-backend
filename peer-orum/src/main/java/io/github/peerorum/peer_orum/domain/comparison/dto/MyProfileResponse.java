@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 @Builder
 public class MyProfileResponse {
     private String name;
+    private String nickname;
     private String university;
     private String major;
     private Integer entranceYear;
@@ -34,6 +35,7 @@ public class MyProfileResponse {
     public static MyProfileResponse from(SpecProfile specProfile, List<Certificate> certificates, List<Activity> activities) {
         return MyProfileResponse.builder()
                 .name(specProfile.getUser().getName())
+                .nickname(specProfile.getUser().getVirtualNickname())
                 .university(specProfile.getUniversity())
                 .major(specProfile.getMajor())
                 .entranceYear(specProfile.getEntranceYear())
