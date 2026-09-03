@@ -1,6 +1,16 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  type ReactNode,
+} from 'react'
+import { api } from '../api/axios'
 
-export type UserRole = 'user' | 'admin'
+export type UserRole =
+  | 'ROLE_GUEST'
+  | 'ROLE_USER'
+  | 'ROLE_ADMIN'
 
 interface AuthUser {
   name: string
@@ -13,35 +23,77 @@ interface AuthContextValue {
   isLoggedIn: boolean
   isAdmin: boolean
   login: (user?: Partial<AuthUser>) => void
-  logout: () => void
+  logout: () => Promise<void>
   setHasSpec: (hasSpec: boolean) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+function getStoredRole(): UserRole {
+  const role = localStorage.getItem('role')
+
+  if (
+    role === 'ROLE_GUEST' ||
+    role === 'ROLE_USER' ||
+    role === 'ROLE_ADMIN'
+  ) {
+    return role
+  }
+
+  return 'ROLE_USER'
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    const token = localStorage.getItem('token')
 
-  const login: AuthContextValue['login'] = (partial) => {
-    setUser({
-      name: partial?.name ?? '유경',
-      hasSpec: partial?.hasSpec ?? true,
-      role: partial?.role ?? 'user',
-    })
-  }
+    if (!token) {
+      return null
+    }
 
-  const logout = () => setUser(null)
+    return {
+      name: localStorage.getItem('name') || '회원',
+      hasSpec: localStorage.getItem('hasSpec') === 'true',
+      role: getStoredRole(),
+    }
+  })
 
-  const setHasSpec = (hasSpec: boolean) => {
+  const login: AuthContextValue['login'] = useCallback((partial) => {
+    const hasSpec = partial?.hasSpec ?? false
+    const role = partial?.role ?? getStoredRole()
+    const name = partial?.name?.trim() || localStorage.getItem('name') || '회원'
+
+    localStorage.setItem('hasSpec', String(hasSpec))
+    localStorage.setItem('role', role)
+    localStorage.setItem('name', name)
+
+    setUser({ name, hasSpec, role })
+  }, [])
+
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout')
+    } finally {
+      localStorage.removeItem('token')
+      localStorage.removeItem('role')
+      localStorage.removeItem('uuid')
+      localStorage.removeItem('hasSpec')
+      localStorage.removeItem('name')
+      setUser(null)
+    }
+  }, [])
+
+  const setHasSpec = useCallback((hasSpec: boolean) => {
+    localStorage.setItem('hasSpec', String(hasSpec))
     setUser((prev) => (prev ? { ...prev, hasSpec } : prev))
-  }
+  }, [])
 
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoggedIn: user !== null,
-        isAdmin: user?.role === 'admin',
+        isAdmin: user?.role === 'ROLE_ADMIN',
         login,
         logout,
         setHasSpec,
@@ -54,6 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+
+  if (!ctx) {
+    throw new Error('useAuth must be used within AuthProvider')
+  }
+
   return ctx
 }

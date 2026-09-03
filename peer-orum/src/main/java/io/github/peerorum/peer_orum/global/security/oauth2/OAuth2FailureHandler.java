@@ -23,16 +23,22 @@ public class OAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler 
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-        log.error("OAuth2 Login Failed: {}", exception.getMessage());
-
         String errorCode = "oauth2_failed";
         if (exception instanceof OAuth2AuthenticationException oauthException) {
             String candidateCode = oauthException.getError().getErrorCode();
             if (candidateCode != null
-                    && candidateCode.startsWith("account_exists_with_")) {
+                    && (candidateCode.startsWith("account_exists_with_")
+                    || candidateCode.equals("oauth_email_required"))) {
                 errorCode = candidateCode;
             }
         }
+
+        log.error(
+                "OAuth2 Login Failed. type={}, code={}, message={}",
+                exception.getClass().getSimpleName(),
+                errorCode,
+                exception.getMessage()
+        );
 
         String redirectUrl = frontendUrl
                 + "/login?error="

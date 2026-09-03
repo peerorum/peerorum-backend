@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -45,7 +46,10 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         OAuth2UserInfo userInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(registrationId, attributes);
 
         if (userInfo.getEmail() == null) {
-            throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
+            throw oauthException(
+                    "oauth_email_required",
+                    "OAuth2 provider did not provide an email"
+            );
         }
 
         String normalizedEmail = userInfo.getEmail()
@@ -63,8 +67,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             user = userOptional.get();
 
             if (user.getProvider() != requestedProvider) {
-                throw new OAuth2AuthenticationException(
-                        providerConflictCode(user.getProvider())
+                throw oauthException(
+                        providerConflictCode(user.getProvider()),
+                        "Email is already registered with another provider"
                 );
             }
 
@@ -95,5 +100,14 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             case KAKAO -> "account_exists_with_kakao";
             case GOOGLE -> "account_exists_with_google";
         };
+    }
+
+    private OAuth2AuthenticationException oauthException(
+            String errorCode,
+            String description
+    ) {
+        return new OAuth2AuthenticationException(
+                new OAuth2Error(errorCode, description, null)
+        );
     }
 }

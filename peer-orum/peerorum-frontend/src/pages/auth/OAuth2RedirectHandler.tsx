@@ -1,7 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-
+import {
+  clearAuthenticationSession,
+  refreshAuthentication,
+  saveAuthenticationSession,
+} from '../../api/auth'
 
 export default function OAuth2RedirectHandler() {
   const [searchParams] = useSearchParams()
@@ -18,42 +22,44 @@ export default function OAuth2RedirectHandler() {
 
     handledRef.current = true
 
-    const token = searchParams.get('token')
-    const role = searchParams.get('role')
-    const uuid = searchParams.get('uuid')
-    const normalizedRole =
-      role === 'ROLE_GUEST' ||
-      role === 'ROLE_USER' ||
-      role === 'ROLE_ADMIN'
-        ? role
-        : 'ROLE_USER'
+    const completeLogin = async () => {
+      const token = searchParams.get('token')
+      const role = searchParams.get('role')
+      const uuid = searchParams.get('uuid')
 
-    if (!token) {
-      navigate('/login', { replace: true })
-      return
+      if (!token) {
+        navigate('/login?error=oauth2_failed', { replace: true })
+        return
+      }
+
+      localStorage.setItem('token', token)
+      if (role) localStorage.setItem('role', role)
+      if (uuid) localStorage.setItem('uuid', uuid)
+
+      try {
+        const session = await refreshAuthentication()
+        saveAuthenticationSession(session)
+        login({
+          name: session.name,
+          role: session.role,
+          hasSpec: session.role !== 'ROLE_GUEST',
+        })
+
+        if (session.role === 'ROLE_GUEST') {
+          navigate('/signup?mode=onboarding', { replace: true })
+        } else if (session.role === 'ROLE_ADMIN') {
+          navigate('/admin', { replace: true })
+        } else {
+          navigate('/mypage/specs', { replace: true })
+        }
+      } catch (error) {
+        console.error('Failed to complete OAuth2 login', error)
+        clearAuthenticationSession()
+        navigate('/login?error=oauth2_failed', { replace: true })
+      }
     }
 
-    localStorage.setItem('token', token)
-
-    localStorage.setItem('role', normalizedRole)
-
-    if (uuid) {
-      localStorage.setItem('uuid', uuid)
-    }
-
-    login({
-      name: 'User',
-      role: normalizedRole === 'ROLE_ADMIN' ? 'admin' : 'user',
-      hasSpec: normalizedRole !== 'ROLE_GUEST',
-    })
-
-    if (normalizedRole === 'ROLE_GUEST') {
-      navigate('/signup', { replace: true })
-    } else if (normalizedRole === 'ROLE_ADMIN') {
-      navigate('/admin', { replace: true })
-    } else {
-      navigate('/mypage/specs', { replace: true })
-    }
+    void completeLogin()
   }, [
     searchParams,
     navigate,

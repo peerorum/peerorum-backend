@@ -9,6 +9,7 @@ import LoginPage from './pages/auth/LoginPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import SignupPage from './pages/auth/SignupPage'
+import OAuth2RedirectHandler from './pages/auth/OAuth2RedirectHandler'
 import MySpecsPage from './pages/mypage/MySpecsPage'
 import SpecRegisterPage from './pages/mypage/SpecRegisterPage'
 import SpecEditPage from './pages/mypage/SpecEditPage'
@@ -48,6 +49,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
 
           <Route path="/mypage/specs" element={<MySpecsPage />} />
           <Route path="/mypage/specs/register" element={<SpecRegisterPage />} />
