@@ -1,10 +1,14 @@
 package io.github.peerorum.peer_orum.domain.spec.service;
 
 import io.github.peerorum.peer_orum.domain.spec.entity.Activity;
+import io.github.peerorum.peer_orum.domain.spec.entity.Award;
 import io.github.peerorum.peer_orum.domain.spec.entity.Certificate;
+import io.github.peerorum.peer_orum.domain.spec.entity.Intern;
 import io.github.peerorum.peer_orum.domain.spec.entity.VerificationStatus;
 import io.github.peerorum.peer_orum.domain.spec.repository.ActivityRepository;
+import io.github.peerorum.peer_orum.domain.spec.repository.AwardRepository;
 import io.github.peerorum.peer_orum.domain.spec.repository.CertificateRepository;
+import io.github.peerorum.peer_orum.domain.spec.repository.InternRepository;
 import io.github.peerorum.peer_orum.domain.user.entity.User;
 import io.github.peerorum.peer_orum.domain.user.repository.UserRepository;
 import io.github.peerorum.peer_orum.global.error.CustomException;
@@ -28,6 +32,8 @@ public class VerificationService {
 
     private final CertificateRepository certificateRepository;
     private final ActivityRepository activityRepository;
+    private final InternRepository internRepository;
+    private final AwardRepository awardRepository;
     private final UserRepository userRepository;
     private final AiService aiService;
     private final SpecProfileRepository specProfileRepository;
@@ -54,8 +60,6 @@ public class VerificationService {
             } catch (Exception e) {
                 log.error("Failed to read file bytes for AI verification", e);
             }
-        } else {
-            log.warn("File is empty or null, cannot verify via AI");
         }
         
         if (isValid) {
@@ -69,19 +73,21 @@ public class VerificationService {
     }
 
     @Transactional
-    public VerificationResponse requestActivityVerification(Long userId, String activityName, String authKey, String fileUrl, MultipartFile file) {
+    public VerificationResponse requestActivityVerification(Long userId, String activityName, String period, String detail, String authKey, String fileUrl, MultipartFile file) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
 
         Activity activity = Activity.builder()
                 .user(user)
                 .activityName(activityName)
+                .period(period)
+                .detail(detail)
                 .authKey(authKey)
                 .fileUrl(fileUrl)
+                .status(VerificationStatus.PENDING)
                 .build();
 
         boolean isValid = false;
-
         if (file != null && !file.isEmpty()) {
             try {
                 String expectedDetails = "활동명: " + activityName + ", 인증키/내용: " + authKey;
@@ -89,18 +95,51 @@ public class VerificationService {
             } catch (Exception e) {
                 log.error("Failed to read file bytes for AI verification", e);
             }
+            if (isValid) {
+                activity.updateStatus(VerificationStatus.VERIFIED);
+            } else {
+                activity.updateStatus(VerificationStatus.REJECTED);
+            }
         } else {
-            log.warn("File is empty or null, cannot verify activity via AI");
-        }
-
-        if (isValid) {
-            activity.updateStatus(VerificationStatus.VERIFIED);
-        } else {
-            activity.updateStatus(VerificationStatus.REJECTED);
+            // No file uploaded, self reported
+            activity.updateStatus(VerificationStatus.NONE);
         }
 
         Activity saved = activityRepository.save(activity);
         return new VerificationResponse(saved.getId(), saved.getStatus());
+    }
+
+    @Transactional
+    public VerificationResponse requestInternVerification(Long userId, String company, String period, String detail) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
+
+        Intern intern = Intern.builder()
+                .user(user)
+                .company(company)
+                .period(period)
+                .detail(detail)
+                .build();
+
+        Intern saved = internRepository.save(intern);
+        return new VerificationResponse(saved.getId(), VerificationStatus.NONE);
+    }
+
+    @Transactional
+    public VerificationResponse requestAwardVerification(Long userId, String name, String host, String awardDate, String detail) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
+
+        Award award = Award.builder()
+                .user(user)
+                .name(name)
+                .host(host)
+                .awardDate(awardDate)
+                .detail(detail)
+                .build();
+
+        Award saved = awardRepository.save(award);
+        return new VerificationResponse(saved.getId(), VerificationStatus.NONE);
     }
 
     public VerificationResponse requestGpaVerification(Long userId, Double gpa, String scoreType, Double percentile, Double majorAverage, MultipartFile file) {
@@ -110,7 +149,6 @@ public class VerificationService {
         boolean isValid = false;
         if (file != null && !file.isEmpty()) {
             try {
-                // 단국대(DK UP) 학점 증명서 포맷 기반 검증
                 StringBuilder detailsBuilder = new StringBuilder();
                 detailsBuilder.append("평균평점: ").append(gpa);
                 if (percentile != null) {
@@ -124,8 +162,6 @@ public class VerificationService {
             } catch (Exception e) {
                 log.error("Failed to read file bytes for GPA verification", e);
             }
-        } else {
-            log.warn("File is empty or null, cannot verify GPA via AI");
         }
 
         if (isValid) {
@@ -150,8 +186,6 @@ public class VerificationService {
             } catch (Exception e) {
                 log.error("Failed to read file bytes for Language verification", e);
             }
-        } else {
-            log.warn("File is empty or null, cannot verify Language via AI");
         }
 
         if (isValid) {

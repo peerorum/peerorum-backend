@@ -1,7 +1,9 @@
 package io.github.peerorum.peer_orum.domain.comparison.dto;
 
 import io.github.peerorum.peer_orum.domain.spec.entity.Activity;
+import io.github.peerorum.peer_orum.domain.spec.entity.Award;
 import io.github.peerorum.peer_orum.domain.spec.entity.Certificate;
+import io.github.peerorum.peer_orum.domain.spec.entity.Intern;
 import io.github.peerorum.peer_orum.domain.spec.entity.SpecProfile;
 import lombok.Builder;
 import lombok.Getter;
@@ -31,8 +33,10 @@ public class MyProfileResponse {
 
     private List<MyCertificateDto> certificates;
     private List<MyActivityDto> activities;
+    private List<MyInternDto> interns;
+    private List<MyAwardDto> awards;
 
-    public static MyProfileResponse from(SpecProfile specProfile, List<Certificate> certificates, List<Activity> activities) {
+    public static MyProfileResponse from(SpecProfile specProfile, List<Certificate> certificates, List<Activity> activities, List<Intern> interns, List<Award> awards) {
         return MyProfileResponse.builder()
                 .name(specProfile.getUser().getName())
                 .nickname(specProfile.getUser().getVirtualNickname())
@@ -46,6 +50,8 @@ public class MyProfileResponse {
                 .desiredJob(specProfile.getDesiredJob())
                 .certificates(certificates.stream().map(MyCertificateDto::from).collect(Collectors.toList()))
                 .activities(activities.stream().map(MyActivityDto::from).collect(Collectors.toList()))
+                .interns(interns.stream().map(MyInternDto::from).collect(Collectors.toList()))
+                .awards(awards.stream().map(MyAwardDto::from).collect(Collectors.toList()))
                 .build();
     }
 }

@@ -5,9 +5,9 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class ActivityVerificationRequest {
-    private String activityName;
-    private String period;
+public class AwardVerificationRequest {
+    private String name;
+    private String host;
+    private String date;
     private String detail;
-    private String authKey;
 }

@@ -5,9 +5,8 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class ActivityVerificationRequest {
-    private String activityName;
+public class InternVerificationRequest {
+    private String company;
     private String period;
     private String detail;
-    private String authKey;
 }

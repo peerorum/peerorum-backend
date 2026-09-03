@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class Activity extends BaseTimeEntity {
+public class Intern extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,34 +22,19 @@ public class Activity extends BaseTimeEntity {
     private User user;
 
     @Column(nullable = false)
-    private String activityName;
+    private String company;
 
+    @Column(nullable = false)
     private String period;
 
     @Column(columnDefinition = "TEXT")
     private String detail;
 
-    private String authKey; // 증명서 번호 또는 인증키
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private VerificationStatus status;
-
-    @Column(name = "file_url")
-    private String fileUrl;
-
     @Builder
-    public Activity(User user, String activityName, String period, String detail, String authKey, String fileUrl, VerificationStatus status) {
+    public Intern(User user, String company, String period, String detail) {
         this.user = user;
-        this.activityName = activityName;
+        this.company = company;
         this.period = period;
         this.detail = detail;
-        this.authKey = authKey;
-        this.fileUrl = fileUrl;
-        this.status = status != null ? status : VerificationStatus.PENDING;
-    }
-
-    public void updateStatus(VerificationStatus status) {
-        this.status = status;
     }
 }

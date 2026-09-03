@@ -1,7 +1,9 @@
 package io.github.peerorum.peer_orum.domain.spec.controller;
 
 import io.github.peerorum.peer_orum.domain.spec.dto.ActivityVerificationRequest;
+import io.github.peerorum.peer_orum.domain.spec.dto.AwardVerificationRequest;
 import io.github.peerorum.peer_orum.domain.spec.dto.CertificateVerificationRequest;
+import io.github.peerorum.peer_orum.domain.spec.dto.InternVerificationRequest;
 import io.github.peerorum.peer_orum.domain.spec.dto.VerificationResponse;
 import io.github.peerorum.peer_orum.domain.spec.service.VerificationService;
 import io.github.peerorum.peer_orum.domain.user.entity.User;
@@ -17,13 +19,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import io.github.peerorum.peer_orum.global.util.S3UploadService;
 import org.springframework.http.MediaType;
 
-@Tag(name = "Verification API", description = "Certificate and Activity Verification APIs")
+@Tag(name = "Verification API", description = "Spec Verification APIs")
 @RestController
 @RequestMapping("/api/verification")
 @RequiredArgsConstructor
@@ -41,7 +44,10 @@ public class VerificationController {
         User user = userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
 
-        String fileUrl = s3UploadService.uploadFile(file, "certificates");
+        String fileUrl = null;
+        if (file != null && !file.isEmpty()) {
+            fileUrl = s3UploadService.uploadFile(file, "certificates");
+        }
 
         VerificationResponse response = verificationService.requestCertificateVerification(
                 user.getId(), request.getCertName(), request.getCertNo(), request.getIssueDate(), fileUrl, file);
@@ -49,7 +55,7 @@ public class VerificationController {
         return ApiResponse.success("Certificate verification requested", response);
     }
 
-    @Operation(summary = "Verify Activity", description = "Submit activity auth key and proof file for verification")
+    @Operation(summary = "Verify Activity", description = "Submit activity for verification")
     @PostMapping(value = "/activity", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<VerificationResponse> verifyActivity(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
                                             @RequestPart("request") ActivityVerificationRequest request,
@@ -57,12 +63,41 @@ public class VerificationController {
         User user = userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
 
-        String fileUrl = s3UploadService.uploadFile(file, "activities");
+        String fileUrl = null;
+        if (file != null && !file.isEmpty()) {
+            fileUrl = s3UploadService.uploadFile(file, "activities");
+        }
 
         VerificationResponse response = verificationService.requestActivityVerification(
-                user.getId(), request.getActivityName(), request.getAuthKey(), fileUrl, file);
+                user.getId(), request.getActivityName(), request.getPeriod(), request.getDetail(), request.getAuthKey(), fileUrl, file);
 
-        return ApiResponse.success("Activity verification submitted", response);
+        return ApiResponse.success("Activity submitted", response);
+    }
+
+    @Operation(summary = "Submit Intern", description = "Submit intern experience (No Verification)")
+    @PostMapping(value = "/intern")
+    public ApiResponse<VerificationResponse> submitIntern(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
+                                            @RequestBody InternVerificationRequest request) {
+        User user = userRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
+
+        VerificationResponse response = verificationService.requestInternVerification(
+                user.getId(), request.getCompany(), request.getPeriod(), request.getDetail());
+
+        return ApiResponse.success("Intern submitted", response);
+    }
+
+    @Operation(summary = "Submit Award", description = "Submit award (No Verification)")
+    @PostMapping(value = "/award")
+    public ApiResponse<VerificationResponse> submitAward(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
+                                            @RequestBody AwardVerificationRequest request) {
+        User user = userRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
+
+        VerificationResponse response = verificationService.requestAwardVerification(
+                user.getId(), request.getName(), request.getHost(), request.getDate(), request.getDetail());
+
+        return ApiResponse.success("Award submitted", response);
     }
 
     @Operation(summary = "Verify GPA", description = "Verify GPA via AI OCR")

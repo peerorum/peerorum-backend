@@ -4,10 +4,14 @@ import io.github.peerorum.peer_orum.domain.user.entity.Role;
 import io.github.peerorum.peer_orum.domain.comparison.dto.MyProfileResponse;
 import io.github.peerorum.peer_orum.domain.comparison.dto.ProfileCreateRequest;
 import io.github.peerorum.peer_orum.domain.spec.entity.Activity;
+import io.github.peerorum.peer_orum.domain.spec.entity.Award;
 import io.github.peerorum.peer_orum.domain.spec.entity.Certificate;
+import io.github.peerorum.peer_orum.domain.spec.entity.Intern;
 import io.github.peerorum.peer_orum.domain.spec.entity.SpecProfile;
 import io.github.peerorum.peer_orum.domain.spec.repository.ActivityRepository;
+import io.github.peerorum.peer_orum.domain.spec.repository.AwardRepository;
 import io.github.peerorum.peer_orum.domain.spec.repository.CertificateRepository;
+import io.github.peerorum.peer_orum.domain.spec.repository.InternRepository;
 import io.github.peerorum.peer_orum.domain.spec.repository.SpecProfileRepository;
 import io.github.peerorum.peer_orum.domain.user.entity.User;
 import io.github.peerorum.peer_orum.domain.user.repository.UserRepository;
@@ -27,6 +31,8 @@ public class ProfileService {
     private final UserRepository userRepository;
     private final CertificateRepository certificateRepository;
     private final ActivityRepository activityRepository;
+    private final InternRepository internRepository;
+    private final AwardRepository awardRepository;
 
     @Transactional
     public void createProfile(Long userId, ProfileCreateRequest request) {
@@ -64,7 +70,9 @@ public class ProfileService {
 
         List<Certificate> certificates = certificateRepository.findByUser(user);
         List<Activity> activities = activityRepository.findByUser(user);
+        List<Intern> interns = internRepository.findByUser(user);
+        List<Award> awards = awardRepository.findByUser(user);
 
-        return MyProfileResponse.from(specProfile, certificates, activities);
+        return MyProfileResponse.from(specProfile, certificates, activities, interns, awards);
     }
 }
