@@ -85,6 +85,9 @@ public class AiService {
 
     private AiJobInfoResponse parseAiResponse(String jobName, String content) {
         try {
+            if (content != null) {
+                content = content.replaceAll("(?s)^```(?:json)?\\s*(.*?)\\s*```$", "$1").trim();
+            }
             Map<String, Object> jsonMap = objectMapper.readValue(content, Map.class);
             return AiJobInfoResponse.builder()
                     .jobName(jobName)
@@ -146,6 +149,9 @@ public class AiService {
                     if (parts != null && !parts.isEmpty()) {
                         String text = (String) parts.get(0).get("text");
                         log.info("Gemini verification response: {}", text);
+                        if (text != null) {
+                            text = text.replaceAll("(?s)^```(?:json)?\\s*(.*?)\\s*```$", "$1").trim();
+                        }
                         Map<String, Object> jsonMap = objectMapper.readValue(text, Map.class);
                         Boolean verified = (Boolean) jsonMap.get("verified");
                         return verified != null && verified;
