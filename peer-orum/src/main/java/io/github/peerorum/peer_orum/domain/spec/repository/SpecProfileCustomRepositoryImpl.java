@@ -60,7 +60,7 @@ public class SpecProfileCustomRepositoryImpl implements SpecProfileCustomReposit
     }
 
     @Override
-    public List<SpecProfile> searchPeers(String university, String major, Double minGpa, Double maxGpa) {
+    public List<SpecProfile> searchPeers(String university, String major, Integer entranceYear, String desiredJob, Double minGpa, Double maxGpa) {
         QSpecProfile specProfile = QSpecProfile.specProfile;
 
         return queryFactory
@@ -68,6 +68,8 @@ public class SpecProfileCustomRepositoryImpl implements SpecProfileCustomReposit
                 .where(
                         eqUniversity(university),
                         eqMajor(major),
+                        eqEntranceYear(entranceYear),
+                        eqDesiredJob(desiredJob),
                         gpaBetween(minGpa, maxGpa)
                 )
                 .orderBy(specProfile.gpa.desc())

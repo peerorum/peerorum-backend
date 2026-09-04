@@ -130,8 +130,8 @@ public class ComparisonService {
     }
 
     @Transactional(readOnly = true)
-    public List<SpecProfileResponse> searchPeers(String university, String major, Double minGpa, Double maxGpa) {
-        List<SpecProfile> peers = specProfileRepository.searchPeers(university, major, minGpa, maxGpa);
+    public List<SpecProfileResponse> searchPeers(String university, String major, Integer entranceYear, String desiredJob, Double minGpa, Double maxGpa) {
+        List<SpecProfile> peers = specProfileRepository.searchPeers(university, major, entranceYear, desiredJob, minGpa, maxGpa);
         return peers.stream()
                 .map(p -> {
                     int certs = certificateRepository.findByUser(p.getUser()).size();

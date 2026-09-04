@@ -45,16 +45,18 @@ public class ComparisonController {
         return ApiResponse.success(response);
     }
 
-    @Operation(summary = "Search Peers", description = "Dynamic search of peers by university, major, and GPA range")
+    @Operation(summary = "Search Peers", description = "Dynamic search of peers by university, major, entranceYear, desiredJob, and GPA range")
     @GetMapping("/search")
     public ApiResponse<java.util.List<io.github.peerorum.peer_orum.domain.comparison.dto.SpecProfileResponse>> searchPeers(
             @org.springframework.web.bind.annotation.RequestParam(required = false) String university,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String major,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer entranceYear,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String desiredJob,
             @org.springframework.web.bind.annotation.RequestParam(required = false) Double minGpa,
             @org.springframework.web.bind.annotation.RequestParam(required = false) Double maxGpa) {
 
         java.util.List<io.github.peerorum.peer_orum.domain.comparison.dto.SpecProfileResponse> responses = 
-                comparisonService.searchPeers(university, major, minGpa, maxGpa);
+                comparisonService.searchPeers(university, major, entranceYear, desiredJob, minGpa, maxGpa);
         return ApiResponse.success(responses);
     }
 }
