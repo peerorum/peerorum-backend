@@ -20,6 +20,10 @@ import io.github.peerorum.peer_orum.domain.spec.entity.Activity;
 import io.github.peerorum.peer_orum.domain.spec.entity.Certificate;
 import io.github.peerorum.peer_orum.domain.spec.repository.ActivityRepository;
 import io.github.peerorum.peer_orum.domain.spec.repository.CertificateRepository;
+import io.github.peerorum.peer_orum.domain.spec.repository.InternRepository;
+import io.github.peerorum.peer_orum.domain.spec.repository.AwardRepository;
+import io.github.peerorum.peer_orum.domain.spec.entity.Intern;
+import io.github.peerorum.peer_orum.domain.spec.entity.Award;
 
 @RequiredArgsConstructor
 @Service
@@ -29,6 +33,8 @@ public class ComparisonService {
     private final UserRepository userRepository;
     private final CertificateRepository certificateRepository;
     private final ActivityRepository activityRepository;
+    private final InternRepository internRepository;
+    private final AwardRepository awardRepository;
 
     @Transactional(readOnly = true)
     public ComparisonStatisticsResponse getComparisonStatistics(Long userId) {
@@ -99,6 +105,8 @@ public class ComparisonService {
 
         List<Certificate> certs = certificateRepository.findByUser(targetUser);
         List<Activity> activities = activityRepository.findByUser(targetUser);
+        List<Intern> interns = internRepository.findByUser(targetUser);
+        List<Award> awards = awardRepository.findByUser(targetUser);
 
         return ProfileDetailResponse.builder()
                 .anonymousUuid(targetUser.getAnonymousUuid())
@@ -111,6 +119,8 @@ public class ComparisonService {
                 .toeicScore(targetProfile.getToeicScore())
                 .certificates(certs.stream().map(ProfileDetailResponse.CertificateDto::from).collect(Collectors.toList()))
                 .activities(activities.stream().map(ProfileDetailResponse.ActivityDto::from).collect(Collectors.toList()))
+                .interns(interns.stream().map(ProfileDetailResponse.InternDto::from).collect(Collectors.toList()))
+                .awards(awards.stream().map(ProfileDetailResponse.AwardDto::from).collect(Collectors.toList()))
                 .build();
     }
 
