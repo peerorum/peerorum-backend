@@ -166,7 +166,7 @@ public class VerificationService {
 
         if (isValid) {
             specProfileRepository.findByUser(user).ifPresent(specProfile -> {
-                specProfile.updateGpa(gpa);
+                specProfile.updateGpa(gpa, percentile, majorAverage);
                 specProfileRepository.save(specProfile);
             });
         }

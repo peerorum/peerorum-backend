@@ -109,10 +109,13 @@ public class AiService {
 
         String prompt = String.format(
             "이 이미지는 '%s' 증빙 자료입니다. " +
-            "문서 내용 중 다음 정보가 정확히 일치하는지 분석해주세요: '%s'. " +
-            "(주의: 화면 캡쳐본일 경우 이름이 안 보일 수 있으니, 이름이 안 보이더라도 위 정보만 일치하면 통과시키세요.) " +
-            "정확히 일치하면 {\"verified\": true}, 아니면 {\"verified\": false}를 JSON 형식으로만 반환하세요.",
-            documentType, expectedDetails
+            "제출자 이름: '%s'. " +
+            "다음 두 가지 조건을 모두 만족하는지 매우 엄격하게 검증해주세요: " +
+            "1. 이미지 내(주로 우측 상단 등)에 제출자 이름('%s')이 명시되어 있어야 합니다. " +
+            "2. 다음 문서 정보가 이미지 내 데이터와 정확히 일치해야 합니다: '%s'. " +
+            "두 조건 중 하나라도 만족하지 않으면 반드시 false를 반환하세요. " +
+            "조건을 모두 만족하면 {\"verified\": true}, 아니면 {\"verified\": false}를 JSON 형식으로만 반환하세요.",
+            documentType, userName, userName, expectedDetails
         );
 
         String base64Image = java.util.Base64.getEncoder().encodeToString(fileBytes);

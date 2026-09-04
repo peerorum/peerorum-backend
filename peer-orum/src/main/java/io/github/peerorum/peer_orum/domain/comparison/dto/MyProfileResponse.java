@@ -22,6 +22,8 @@ public class MyProfileResponse {
     
     // Academic
     private Double gpa;
+    private Double majorGpa;
+    private Double convertedScore;
 
     // Language
     private Integer toeicScore;
@@ -44,6 +46,8 @@ public class MyProfileResponse {
                 .major(specProfile.getMajor())
                 .entranceYear(specProfile.getEntranceYear())
                 .gpa(specProfile.getGpa())
+                .majorGpa(specProfile.getMajorGpa())
+                .convertedScore(specProfile.getConvertedScore())
                 .toeicScore(specProfile.getToeicScore())
                 .opicGrade(specProfile.getOpicGrade())
                 .toeicSpeakingGrade(specProfile.getToeicSpeakingGrade())

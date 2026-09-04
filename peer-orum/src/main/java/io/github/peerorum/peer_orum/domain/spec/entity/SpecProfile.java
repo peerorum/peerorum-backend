@@ -27,6 +27,8 @@ public class SpecProfile extends BaseTimeEntity {
 
     // Academic
     private Double gpa;
+    private Double majorGpa;
+    private Double convertedScore;
 
     // Language
     private Integer toeicScore;
@@ -38,13 +40,16 @@ public class SpecProfile extends BaseTimeEntity {
 
     @Builder
     public SpecProfile(User user, String university, String major, Integer entranceYear, 
-                       Double gpa, Integer toeicScore, String opicGrade, 
+                       Double gpa, Double majorGpa, Double convertedScore,
+                       Integer toeicScore, String opicGrade, 
                        String toeicSpeakingGrade, String desiredJob) {
         this.user = user;
         this.university = university;
         this.major = major;
         this.entranceYear = entranceYear;
         this.gpa = gpa;
+        this.majorGpa = majorGpa;
+        this.convertedScore = convertedScore;
         this.toeicScore = toeicScore;
         this.opicGrade = opicGrade;
         this.toeicSpeakingGrade = toeicSpeakingGrade;
@@ -60,8 +65,10 @@ public class SpecProfile extends BaseTimeEntity {
         this.desiredJob = desiredJob;
     }
 
-    public void updateGpa(Double gpa) {
+    public void updateGpa(Double gpa, Double convertedScore, Double majorGpa) {
         this.gpa = gpa;
+        this.convertedScore = convertedScore;
+        this.majorGpa = majorGpa;
     }
 
     public void updateLanguageScore(Integer toeicScore, String opicGrade, String toeicSpeakingGrade) {
