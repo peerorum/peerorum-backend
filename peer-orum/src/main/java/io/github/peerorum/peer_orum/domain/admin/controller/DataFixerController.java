@@ -50,13 +50,13 @@ public class DataFixerController {
     @Transactional
     public ApiResponse<String> fixMockData() {
         try {
-            String updateUsersSql = "UPDATE user SET virtual_nickname = CONCAT(" +
+            String updateUsersSql = "UPDATE users SET virtual_nickname = CONCAT(" +
                 "ELT(FLOOR(RAND() * 15) + 1, '두근두근', '열정적인', '성장하는', '도전하는', '꾸준한', '상위1%', '합격하는', '갓생사는', '완벽한', '빛나는', '노력하는', '긍정적인', '발전하는', '집중하는', '즐거운'), " +
                 "ELT(FLOOR(RAND() * 15) + 1, '합격', '개발자', '기획자', '디자이너', '마케터', '펭귄', '개미', '독수리', '다람쥐', '지원자', '루키', '전문가', '도전자', '신입', '인재')" +
                 ") WHERE role = 'ROLE_GUEST' OR email LIKE '%mock%'";
                 
             String updateSpecProfilesSql = "UPDATE spec_profile sp " +
-                "JOIN user u ON sp.user_id = u.id " +
+                "JOIN users u ON sp.user_id = u.id " +
                 "SET sp.major = ELT(FLOOR(RAND() * 21) + 1, " +
                 "'국어국문학과', '철학과', '사학과', '영미인문학과', '법학과', '정치외교학과', '행정학과', '상담학과', '경제학과', '무역학과', " +
                 "'전자전기공학과', '융합반도체공학과', '기계공학과', '화학공학과', '소프트웨어학과', '컴퓨터공학과', '인공지능학과', '국제경영학과', " +
