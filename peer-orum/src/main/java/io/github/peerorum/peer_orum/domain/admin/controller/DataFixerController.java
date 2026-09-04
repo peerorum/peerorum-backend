@@ -52,8 +52,8 @@ public class DataFixerController {
         try {
             String updateUsersSql = "UPDATE users SET virtual_nickname = CONCAT(" +
                 "ELT(FLOOR(RAND() * 15) + 1, '두근두근', '열정적인', '성장하는', '도전하는', '꾸준한', '상위1%', '합격하는', '갓생사는', '완벽한', '빛나는', '노력하는', '긍정적인', '발전하는', '집중하는', '즐거운'), " +
-                "ELT(FLOOR(RAND() * 15) + 1, '합격', '개발자', '기획자', '디자이너', '마케터', '펭귄', '개미', '독수리', '다람쥐', '지원자', '루키', '전문가', '도전자', '신입', '인재')" +
-                ") WHERE role = 'ROLE_GUEST' OR email LIKE '%mock%'";
+                "ELT(FLOOR(RAND() * 15) + 1, '합격', '개발자', '기획자', '디자이너', '마케터', '펭귄', '개미', '독수리', '다람쥐', '지원자', '루키', '전문가', '도전자', '신입', '인재'), " +
+                "id) WHERE role = 'ROLE_GUEST' OR email LIKE '%mock%'";
                 
             String updateSpecProfilesSql = "UPDATE spec_profile sp " +
                 "JOIN users u ON sp.user_id = u.id " +
@@ -63,10 +63,17 @@ public class DataFixerController {
                 "'경영경제대학 경영학부 경영학전공', '무역학과', '산업경영학과(야)') " +
                 "WHERE u.role = 'ROLE_GUEST' OR u.email LIKE '%mock%'";
 
+            String insertInternsSql = "INSERT INTO intern (user_id, company, period, detail, created_at, updated_at) " +
+                "SELECT u.id, ELT(FLOOR(RAND() * 5) + 1, '네이버', '카카오', '라인', '쿠팡', '배달의민족'), '6개월', '백엔드 인턴십 수료', NOW(), NOW() " +
+                "FROM users u " +
+                "WHERE (u.role = 'ROLE_GUEST' OR u.email LIKE '%mock%') AND RAND() < 0.2 " +
+                "AND NOT EXISTS (SELECT 1 FROM intern i WHERE i.user_id = u.id)";
+
             int usersUpdated = jdbcTemplate.update(updateUsersSql);
             int profilesUpdated = jdbcTemplate.update(updateSpecProfilesSql);
+            int internsInserted = jdbcTemplate.update(insertInternsSql);
             
-            return ApiResponse.success("Fixed " + usersUpdated + " mock users' nickname and " + profilesUpdated + " majors via native SQL.");
+            return ApiResponse.success("Fixed " + usersUpdated + " mock users' nickname, " + profilesUpdated + " majors, inserted " + internsInserted + " interns via native SQL.");
         } catch (Exception e) {
             return ApiResponse.success("Error: " + e.getMessage() + " | Cause: " + (e.getCause() != null ? e.getCause().getMessage() : "null"));
         }

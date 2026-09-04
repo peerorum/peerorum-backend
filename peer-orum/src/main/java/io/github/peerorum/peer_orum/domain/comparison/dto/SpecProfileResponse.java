@@ -17,10 +17,10 @@ public class SpecProfileResponse {
     private Integer internCount;
     private Integer activityCount;
 
-    public static SpecProfileResponse from(SpecProfile specProfile) {
-        int certs = specProfile.getCertificates() != null ? specProfile.getCertificates().size() : 0;
-        int interns = specProfile.getInterns() != null ? specProfile.getInterns().size() : 0;
-        int activities = specProfile.getActivities() != null ? specProfile.getActivities().size() : 0;
+    public static SpecProfileResponse of(SpecProfile specProfile, int certCount, int internCount, int activityCount) {
+        
+        
+        
 
         return SpecProfileResponse.builder()
                 .anonymousUuid(specProfile.getUser().getAnonymousUuid())
@@ -29,9 +29,9 @@ public class SpecProfileResponse {
                 .gpa(specProfile.getGpa())
                 .toeicScore(specProfile.getToeicScore())
                 .desiredJob(specProfile.getDesiredJob())
-                .verificationCount(certs)
-                .internCount(interns)
-                .activityCount(activities)
+                .verificationCount(certCount)
+                .internCount(internCount)
+                .activityCount(activityCount)
                 .build();
     }
 }

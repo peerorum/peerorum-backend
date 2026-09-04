@@ -84,7 +84,12 @@ public class ComparisonService {
         double percentile = peers.size() > 1 ? (double)(peers.size() - rank) / (peers.size() - 1) * 100 : 100.0;
 
         List<SpecProfileResponse> peerResponses = peers.stream()
-                .map(SpecProfileResponse::from)
+                .map(p -> {
+                    int certs = certificateRepository.findByUser(p.getUser()).size();
+                    int interns = internRepository.findByUser(p.getUser()).size();
+                    int activities = activityRepository.findByUser(p.getUser()).size();
+                    return SpecProfileResponse.of(p, certs, interns, activities);
+                })
                 .collect(Collectors.toList());
 
         return ComparisonStatisticsResponse.builder()
@@ -128,7 +133,12 @@ public class ComparisonService {
     public List<SpecProfileResponse> searchPeers(String university, String major, Double minGpa, Double maxGpa) {
         List<SpecProfile> peers = specProfileRepository.searchPeers(university, major, minGpa, maxGpa);
         return peers.stream()
-                .map(SpecProfileResponse::from)
+                .map(p -> {
+                    int certs = certificateRepository.findByUser(p.getUser()).size();
+                    int interns = internRepository.findByUser(p.getUser()).size();
+                    int activities = activityRepository.findByUser(p.getUser()).size();
+                    return SpecProfileResponse.of(p, certs, interns, activities);
+                })
                 .collect(Collectors.toList());
     }
 }
