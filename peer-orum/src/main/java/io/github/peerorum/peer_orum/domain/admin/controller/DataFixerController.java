@@ -7,8 +7,10 @@ import io.github.peerorum.peer_orum.domain.user.entity.User;
 import io.github.peerorum.peer_orum.domain.user.repository.UserRepository;
 import io.github.peerorum.peer_orum.global.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -73,6 +75,31 @@ public class DataFixerController {
             return ApiResponse.success("Fixed " + usersUpdated + " mock users' nickname, " + profilesUpdated + " majors, inserted " + internsInserted + " interns via native SQL.");
         } catch (Exception e) {
             return ApiResponse.success("Error: " + e.getMessage() + " | Cause: " + (e.getCause() != null ? e.getCause().getMessage() : "null"));
+        }
+    }
+
+    @DeleteMapping("/delete-user")
+    @Transactional
+    public ApiResponse<String> deleteUserByEmail(@RequestParam String email) {
+        try {
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ApiResponse.success("User not found with email: " + email);
+            }
+            User user = userOpt.get();
+            Long userId = user.getId();
+
+            // Delete all related data in correct order
+            jdbcTemplate.update("DELETE FROM award WHERE user_id = ?", userId);
+            jdbcTemplate.update("DELETE FROM activity WHERE user_id = ?", userId);
+            jdbcTemplate.update("DELETE FROM intern WHERE user_id = ?", userId);
+            jdbcTemplate.update("DELETE FROM certificate WHERE user_id = ?", userId);
+            jdbcTemplate.update("DELETE FROM spec_profile WHERE user_id = ?", userId);
+            jdbcTemplate.update("DELETE FROM users WHERE id = ?", userId);
+
+            return ApiResponse.success("Successfully deleted user and all associated data for: " + email);
+        } catch (Exception e) {
+            return ApiResponse.success("Error deleting user: " + e.getMessage());
         }
     }
 }
