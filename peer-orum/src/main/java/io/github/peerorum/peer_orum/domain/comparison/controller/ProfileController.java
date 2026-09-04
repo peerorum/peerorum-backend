@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,5 +45,22 @@ public class ProfileController {
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
         
         return ApiResponse.success("Profile retrieved successfully", profileService.getMyProfile(user.getId()));
+    }
+
+    @Operation(summary = "Update My Profile", description = "Update nickname, desiredJob, and grade")
+    @PutMapping("/me")
+    public ApiResponse<Void> updateProfile(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
+                                           @RequestBody java.util.Map<String, Object> request) {
+        User user = userRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
+
+        String nickname = (String) request.get("nickname");
+        String desiredJob = (String) request.get("desiredJob");
+        Integer entranceYear = request.get("entranceYear") != null 
+                ? Integer.valueOf(request.get("entranceYear").toString()) : null;
+
+        profileService.updateProfile(user.getId(), nickname, desiredJob, entranceYear);
+
+        return ApiResponse.success("Profile updated successfully", null);
     }
 }

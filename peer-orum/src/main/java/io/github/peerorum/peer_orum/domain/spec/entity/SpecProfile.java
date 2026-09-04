@@ -65,6 +65,14 @@ public class SpecProfile extends BaseTimeEntity {
         this.desiredJob = desiredJob;
     }
 
+    public void updateDesiredJob(String desiredJob) {
+        if (desiredJob != null) this.desiredJob = desiredJob;
+    }
+
+    public void updateEntranceYear(Integer entranceYear) {
+        if (entranceYear != null) this.entranceYear = entranceYear;
+    }
+
     public void updateGpa(Double gpa, Double convertedScore, Double majorGpa) {
         this.gpa = gpa;
         this.convertedScore = convertedScore;

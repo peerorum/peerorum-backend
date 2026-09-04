@@ -75,4 +75,19 @@ public class ProfileService {
 
         return MyProfileResponse.from(specProfile, certificates, activities, interns, awards);
     }
+
+    @Transactional
+    public void updateProfile(Long userId, String nickname, String desiredJob, Integer entranceYear) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
+
+        if (nickname != null && !nickname.trim().isEmpty()) {
+            user.updateVirtualNickname(nickname.trim());
+        }
+
+        specProfileRepository.findByUser(user).ifPresent(profile -> {
+            if (desiredJob != null) profile.updateDesiredJob(desiredJob);
+            if (entranceYear != null) profile.updateEntranceYear(entranceYear);
+        });
+    }
 }
