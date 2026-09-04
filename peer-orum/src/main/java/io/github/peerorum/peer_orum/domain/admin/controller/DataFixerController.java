@@ -26,9 +26,16 @@ public class DataFixerController {
     private final SpecProfileRepository specProfileRepository;
     private final JdbcTemplate jdbcTemplate;
     
-    private final String[] NICKNAME_PREFIXES = {
-        "성장하는펭귄", "오름러", "스펙마스터", "도전왕개미", "열정펭귄",
-        "상위1%도전자", "꾸준한다람쥐", "취준왕독수리", "갓생러", "자소서장인"
+    private final String[] ADJECTIVES = {
+        "두근두근", "열정적인", "성장하는", "도전하는", "꾸준한",
+        "상위1%", "합격하는", "갓생사는", "완벽한", "빛나는",
+        "노력하는", "긍정적인", "발전하는", "집중하는", "즐거운"
+    };
+
+    private final String[] NOUNS = {
+        "합격", "개발자", "기획자", "디자이너", "마케터",
+        "펭귄", "개미", "독수리", "다람쥐", "지원자",
+        "루키", "전문가", "도전자", "신입", "인재"
     };
 
     private final String[] MAJORS = {
@@ -50,8 +57,8 @@ public class DataFixerController {
         int count = 0;
         
         for (User user : mockUsers) {
-            String randomNickname = NICKNAME_PREFIXES[random.nextInt(NICKNAME_PREFIXES.length)] 
-                                  + " " + (1000 + random.nextInt(9000));
+            String randomNickname = ADJECTIVES[random.nextInt(ADJECTIVES.length)] 
+                                  + NOUNS[random.nextInt(NOUNS.length)];
             String randomMajor = MAJORS[random.nextInt(MAJORS.length)];
             
             // Update virtual nickname
