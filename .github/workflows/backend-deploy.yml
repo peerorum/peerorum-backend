@@ -132,3 +132,24 @@ jobs:
               fi
               if curl --fail --silent --output /dev/null \
                 http://localhost:8080/oauth2/authorization/google; then
+                HEALTHY=true
+                break
+              fi
+              sleep 2
+            done
+
+            if [ "$HEALTHY" != "true" ]; then
+              echo "New server failed health check."
+              tail -n 100 "$LOG_FILE" || true
+              NEW_PID=$(cat "$PID_FILE")
+              kill "$NEW_PID" 2>/dev/null || true
+
+              if [ -f "$PREVIOUS_JAR" ]; then
+                cp "$PREVIOUS_JAR" "$CURRENT_JAR"
+                start_server
+                echo "Previous server version was restored."
+              fi
+              exit 1
+            fi
+
+            echo "Backend deployment completed. PID: $(cat "$PID_FILE")"
