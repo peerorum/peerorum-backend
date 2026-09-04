@@ -89,7 +89,8 @@ public class DataFixerController {
             User user = userOpt.get();
             Long userId = user.getId();
 
-            // Delete all related data in correct order
+            // Delete all related data in correct order (including refresh tokens)
+            jdbcTemplate.update("DELETE FROM refresh_tokens WHERE user_id = ?", userId);
             jdbcTemplate.update("DELETE FROM award WHERE user_id = ?", userId);
             jdbcTemplate.update("DELETE FROM activity WHERE user_id = ?", userId);
             jdbcTemplate.update("DELETE FROM intern WHERE user_id = ?", userId);
