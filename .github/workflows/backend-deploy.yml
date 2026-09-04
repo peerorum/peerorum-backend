@@ -1,0 +1,134 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "peer-orum/src/**"
+      - "peer-orum/build.gradle"
+      - "peer-orum/settings.gradle"
+      - "peer-orum/gradle/**"
+      - "peer-orum/gradlew"
+      - ".github/workflows/backend-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-production
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: peer-orum/*.gradle
+
+      - name: Build and test
+        working-directory: peer-orum
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon clean build
+
+      - name: Prepare deployment artifact
+        run: |
+          mkdir -p deploy
+          cp peer-orum/build/libs/peer-orum-0.0.1-SNAPSHOT.jar deploy/peer-orum.jar
+
+      - name: Upload JAR to EC2
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          source: deploy/peer-orum.jar
+          target: /home/ubuntu/peerorum-deploy
+          strip_components: 1
+          overwrite: true
+
+      - name: Restart backend
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          command_timeout: 5m
+          script: |
+            set -eu
+
+            APP_DIR=/home/ubuntu/peerorum-backend/peer-orum
+            DEPLOY_DIR=/home/ubuntu/peerorum-deploy
+            RUNTIME_DIR=/home/ubuntu/peerorum-runtime
+            NEW_JAR="$DEPLOY_DIR/peer-orum.jar"
+            CURRENT_JAR="$RUNTIME_DIR/peer-orum-current.jar"
+            PREVIOUS_JAR="$RUNTIME_DIR/peer-orum-previous.jar"
+            PID_FILE="$RUNTIME_DIR/app.pid"
+            LOG_FILE="$APP_DIR/app.log"
+
+            mkdir -p "$DEPLOY_DIR" "$RUNTIME_DIR"
+            test -f "$NEW_JAR"
+            test -f "$APP_DIR/.env"
+
+            set -a
+            . "$APP_DIR/.env"
+            set +a
+
+            if [ -f "$CURRENT_JAR" ]; then
+              cp "$CURRENT_JAR" "$PREVIOUS_JAR"
+            elif [ -f "$APP_DIR/build/libs/peer-orum-0.0.1-SNAPSHOT.jar" ]; then
+              cp "$APP_DIR/build/libs/peer-orum-0.0.1-SNAPSHOT.jar" "$PREVIOUS_JAR"
+            fi
+
+            if [ -f "$PID_FILE" ]; then
+              OLD_PID=$(cat "$PID_FILE")
+              if kill -0 "$OLD_PID" 2>/dev/null; then
+                kill "$OLD_PID"
+                for attempt in $(seq 1 15); do
+                  if ! kill -0 "$OLD_PID" 2>/dev/null; then
+                    break
+                  fi
+                  sleep 1
+                done
+                if kill -0 "$OLD_PID" 2>/dev/null; then
+                  kill -9 "$OLD_PID"
+                fi
+              fi
+            fi
+
+            cp "$NEW_JAR" "$CURRENT_JAR"
+
+            start_server() {
+              nohup java \
+                -Xms128m \
+                -Xmx384m \
+                -XX:MaxMetaspaceSize=192m \
+                -XX:+UseSerialGC \
+                -jar "$CURRENT_JAR" \
+                > "$LOG_FILE" 2>&1 &
+              echo $! > "$PID_FILE"
+            }
+
+            start_server
+
+            HEALTHY=false
+            for attempt in $(seq 1 30); do
+              if ! kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+                break
+              fi
+              if curl --fail --silent --output /dev/null \
+                http://localhost:8080/oauth2/authorization/google; then
