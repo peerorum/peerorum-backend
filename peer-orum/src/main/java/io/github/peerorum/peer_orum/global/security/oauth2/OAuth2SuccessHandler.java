@@ -80,6 +80,10 @@ public class OAuth2SuccessHandler
                         "role",
                         user.getRole().name()
                 )
+                .queryParam(
+                        "name",
+                        user.getName()
+                )
                 .build()
                 .encode()
                 .toUriString();

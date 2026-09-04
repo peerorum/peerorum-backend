@@ -28,6 +28,10 @@ public class KakaoOAuth2UserInfo extends OAuth2UserInfo {
         if (kakaoAccount == null) {
             return null;
         }
-        return (String) kakaoAccount.get("email");
+        String email = (String) kakaoAccount.get("email");
+        if (email == null) {
+            return "kakao_" + getId() + "@kakao.com";
+        }
+        return email;
     }
 }
