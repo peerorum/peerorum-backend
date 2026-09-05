@@ -85,6 +85,22 @@ public class LocalAuthService {
         return issueAuthentication(user);
     }
 
+    @Transactional(readOnly = true)
+    public void verifyPassword(String email, String rawPassword) {
+        User user = userRepository
+                .findByEmailIgnoreCase(normalizeEmail(email))
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
+
+        if (user.getProvider() != Provider.LOCAL) {
+            // For social login, we bypass password check as we don't store their password.
+            return;
+        }
+
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS, "비밀번호가 일치하지 않습니다.");
+        }
+    }
+
     private AuthenticationResult issueAuthentication(User user) {
         String accessToken =
                 jwtTokenProvider.createToken(

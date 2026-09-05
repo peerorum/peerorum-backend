@@ -46,6 +46,16 @@ public class AuthController {
     private final JwtTokenProvider jwtTokenProvider;
     private final LocalAuthService localAuthService;
 
+    @Operation(summary = "Verify Password", description = "Verify password before sensitive operations")
+    @PostMapping("/verify-password")
+    public ApiResponse<Void> verifyPassword(
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
+            @Valid @RequestBody io.github.peerorum.peer_orum.domain.auth.dto.PasswordVerifyRequest request
+    ) {
+        localAuthService.verifyPassword(principal.getUsername(), request.getPassword());
+        return ApiResponse.success("Password verified", null);
+    }
+
     @Operation(
             summary = "Sign Up with Email",
             description = "Create a local account and issue access and refresh tokens"

@@ -18,8 +18,8 @@ public class ProfileDetailResponse {
     private String major;
     private Integer entranceYear;
     private String desiredJob;
-    private double gpa;
-    private int toeicScore;
+    private Double gpa;
+    private Integer toeicScore;
 
     private List<CertificateDto> certificates;
     private List<ActivityDto> activities;
