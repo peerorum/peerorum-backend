@@ -19,6 +19,7 @@ public class ProfileDetailResponse {
     private Integer entranceYear;
     private String desiredJob;
     private Double gpa;
+    private Integer gpaPercentile;
     private Integer toeicScore;
 
     private List<CertificateDto> certificates;

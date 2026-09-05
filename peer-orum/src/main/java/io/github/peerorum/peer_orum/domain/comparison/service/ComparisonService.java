@@ -113,6 +113,19 @@ public class ComparisonService {
         List<Intern> interns = internRepository.findByUser(targetUser);
         List<Award> awards = awardRepository.findByUser(targetUser);
 
+        List<SpecProfile> comparableProfiles = specProfileRepository.findAll().stream()
+                .filter(profile -> profile.getGpa() != null)
+                .collect(Collectors.toList());
+        double targetGpa = targetProfile.getGpa() != null ? targetProfile.getGpa() : 0.0;
+        long higherGpaCount = comparableProfiles.stream()
+                .filter(profile -> profile.getGpa() > targetGpa)
+                .count();
+        int gpaPercentile = comparableProfiles.isEmpty()
+                ? 0
+                : Math.max(1, (int) Math.ceil(
+                        (higherGpaCount + 1) * 100.0 / comparableProfiles.size()
+                ));
+
         return ProfileDetailResponse.builder()
                 .anonymousUuid(targetUser.getAnonymousUuid())
                 .virtualNickname(targetUser.getVirtualNickname())
@@ -121,6 +134,7 @@ public class ComparisonService {
                 .entranceYear(targetProfile.getEntranceYear())
                 .desiredJob(targetProfile.getDesiredJob())
                 .gpa(targetProfile.getGpa())
+                .gpaPercentile(gpaPercentile)
                 .toeicScore(targetProfile.getToeicScore())
                 .certificates(certs.stream().map(ProfileDetailResponse.CertificateDto::from).collect(Collectors.toList()))
                 .activities(activities.stream().map(ProfileDetailResponse.ActivityDto::from).collect(Collectors.toList()))
