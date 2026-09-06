@@ -23,9 +23,8 @@ public class SpecProfileCustomRepositoryImpl implements SpecProfileCustomReposit
                 .selectFrom(specProfile)
                 .where(
                         eqUniversity(university),
-                        eqMajor(major),
-                        eqEntranceYear(entranceYear),
-                        eqDesiredJob(desiredJob)
+                        eqMajor(major)
+                        // 학년/희망직무 필터 비활성화 (데이터 부족으로 출시 시점 한시적 해제)
                 )
                 .orderBy(specProfile.gpa.desc())
                 .fetch();
@@ -68,8 +67,7 @@ public class SpecProfileCustomRepositoryImpl implements SpecProfileCustomReposit
                 .where(
                         eqUniversity(university),
                         eqMajor(major),
-                        eqEntranceYear(entranceYear),
-                        eqDesiredJob(desiredJob),
+                        // 학년/희망직무 필터 비활성화 (데이터 부족으로 출시 시점 한시적 해제)
                         gpaBetween(minGpa, maxGpa)
                 )
                 .orderBy(specProfile.gpa.desc())
