@@ -16,8 +16,9 @@ public class SpecProfileResponse {
     private Integer verificationCount;
     private Integer internCount;
     private Integer activityCount;
+    private Integer awardCount;
 
-    public static SpecProfileResponse of(SpecProfile specProfile, int certCount, int internCount, int activityCount) {
+    public static SpecProfileResponse of(SpecProfile specProfile, int certCount, int internCount, int activityCount, int awardCount) {
         
         
         
@@ -32,6 +33,7 @@ public class SpecProfileResponse {
                 .verificationCount(certCount)
                 .internCount(internCount)
                 .activityCount(activityCount)
+                .awardCount(awardCount)
                 .build();
     }
 }

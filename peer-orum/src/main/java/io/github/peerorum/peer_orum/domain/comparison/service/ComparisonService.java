@@ -88,7 +88,8 @@ public class ComparisonService {
                     int certs = certificateRepository.findByUser(p.getUser()).size();
                     int interns = internRepository.findByUser(p.getUser()).size();
                     int activities = activityRepository.findByUser(p.getUser()).size();
-                    return SpecProfileResponse.of(p, certs, interns, activities);
+                    int awards = awardRepository.findByUser(p.getUser()).size();
+                    return SpecProfileResponse.of(p, certs, interns, activities, awards);
                 })
                 .collect(Collectors.toList());
 
@@ -151,7 +152,8 @@ public class ComparisonService {
                     int certs = certificateRepository.findByUser(p.getUser()).size();
                     int interns = internRepository.findByUser(p.getUser()).size();
                     int activities = activityRepository.findByUser(p.getUser()).size();
-                    return SpecProfileResponse.of(p, certs, interns, activities);
+                    int awards = awardRepository.findByUser(p.getUser()).size();
+                    return SpecProfileResponse.of(p, certs, interns, activities, awards);
                 })
                 .collect(Collectors.toList());
     }
