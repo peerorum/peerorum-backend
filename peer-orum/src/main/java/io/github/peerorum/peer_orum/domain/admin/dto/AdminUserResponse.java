@@ -16,4 +16,7 @@ public class AdminUserResponse {
     private long totalElements;
     private int totalPages;
     private int currentPage;
+    private long totalActive;
+    private long totalSuspended;
+    private long totalWithdrawn;
 }

@@ -1,6 +1,7 @@
 package io.github.peerorum.peer_orum.global.security;
 
 import io.github.peerorum.peer_orum.global.security.jwt.JwtAuthenticationFilter;
+import io.github.peerorum.peer_orum.domain.user.repository.UserRepository;
 import io.github.peerorum.peer_orum.global.security.jwt.JwtTokenProvider;
 import io.github.peerorum.peer_orum.global.security.oauth2.CustomOAuth2UserService;
 import io.github.peerorum.peer_orum.global.security.oauth2.OAuth2FailureHandler;
@@ -29,6 +30,7 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
+    private final UserRepository userRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -79,7 +81,7 @@ public class SecurityConfig {
                         .failureHandler(oAuth2FailureHandler)
                 )
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) // h2-console
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userRepository), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
