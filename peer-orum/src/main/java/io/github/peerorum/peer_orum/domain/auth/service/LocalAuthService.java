@@ -72,6 +72,10 @@ public class LocalAuthService {
             );
         }
 
+        if (!user.isActive()) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "정지되었거나 탈퇴 처리된 계정입니다.");
+        }
+
         if (user.getPasswordHash() == null
                 || !passwordEncoder.matches(
                         request.password(),

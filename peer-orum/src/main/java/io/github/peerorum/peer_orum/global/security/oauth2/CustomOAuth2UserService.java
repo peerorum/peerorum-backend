@@ -73,6 +73,10 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 );
             }
 
+            if (!user.isActive()) {
+                throw oauthException("account_inactive", "Account is suspended or withdrawn");
+            }
+
             if (user.getRole() == Role.ROLE_GUEST
                     && specProfileRepository.findByUser(user).isPresent()) {
                 user.updateRole(Role.ROLE_USER);

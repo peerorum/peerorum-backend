@@ -41,6 +41,10 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(32) default 'ACTIVE'")
+    private AccountStatus accountStatus = AccountStatus.ACTIVE;
+
     // Anonymous Identity
     @Column(nullable = false, unique = true, updatable = false)
     private String anonymousUuid;
@@ -64,6 +68,7 @@ public class User extends BaseTimeEntity {
         this.providerId = providerId;
         this.passwordHash = passwordHash;
         this.role = role;
+        this.accountStatus = AccountStatus.ACTIVE;
         this.anonymousUuid = UUID.randomUUID().toString();
         this.virtualNickname = virtualNickname;
     }
@@ -74,5 +79,13 @@ public class User extends BaseTimeEntity {
     
     public void updateRole(Role role) {
         this.role = role;
+    }
+
+    public void updateAccountStatus(AccountStatus accountStatus) {
+        this.accountStatus = accountStatus;
+    }
+
+    public boolean isActive() {
+        return accountStatus == null || accountStatus == AccountStatus.ACTIVE;
     }
 }
