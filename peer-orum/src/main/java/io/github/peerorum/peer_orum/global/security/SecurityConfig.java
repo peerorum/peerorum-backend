@@ -68,7 +68,7 @@ public class SecurityConfig {
                                         "/api/auth/**",
                                         "/login/**",
                                         "/oauth2/**",
-                                        "/api/majors/**", "/api/admin/**"
+                                        "/api/majors/**", "/api/admin/**", "/api/feedbacks/**"
                                 ).permitAll()
                                 
                                 .anyRequest()
