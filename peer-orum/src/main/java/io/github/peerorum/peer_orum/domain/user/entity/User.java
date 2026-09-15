@@ -73,6 +73,10 @@ public class User extends BaseTimeEntity {
         this.virtualNickname = virtualNickname;
     }
 
+    public void updateName(String name) {
+        this.name = name;
+    }
+
     public void updateVirtualNickname(String newNickname) {
         this.virtualNickname = newNickname;
     }

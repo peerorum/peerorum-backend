@@ -25,6 +25,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PutMapping;
+import io.github.peerorum.peer_orum.domain.auth.dto.NameUpdateRequest;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -213,6 +215,20 @@ public class AuthController {
                 "Logged out successfully",
                 null
         );
+    }
+
+    
+    @Operation(summary = "Update Real Name", description = "Update the user's real name (e.g. for social login users)")
+    @PutMapping("/me/name")
+    public ApiResponse<Void> updateRealName(
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
+            @Valid @RequestBody NameUpdateRequest request
+    ) {
+        User user = userRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
+        user.updateName(request.getName());
+        userRepository.save(user);
+        return ApiResponse.success("Real name updated successfully", null);
     }
 
     private ApiResponse<AuthenticationResponse> authenticationResponse(
