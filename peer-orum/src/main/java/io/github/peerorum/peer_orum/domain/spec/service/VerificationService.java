@@ -86,7 +86,7 @@ public class VerificationService {
                 .activityName(activityName)
                 .period(period)
                 .detail(detail)
-                .authKey(authKey)
+                .authKey(authKey != null ? authKey : "")
                 .fileUrl(fileUrl)
                 .status(VerificationStatus.PENDING)
                 .build();
