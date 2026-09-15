@@ -11,6 +11,7 @@ public class SpecProfileResponse {
     private String virtualNickname;
     private String major;
     private Double gpa;
+    private Integer gpaPercentile;
     private Integer toeicScore;
     private String desiredJob;
     private Integer verificationCount;
@@ -19,6 +20,10 @@ public class SpecProfileResponse {
     private Integer awardCount;
 
     public static SpecProfileResponse of(SpecProfile specProfile, int certCount, int internCount, int activityCount, int awardCount) {
+        return of(specProfile, certCount, internCount, activityCount, awardCount, null);
+    }
+
+    public static SpecProfileResponse of(SpecProfile specProfile, int certCount, int internCount, int activityCount, int awardCount, Integer gpaPercentile) {
         
         
         
@@ -28,6 +33,7 @@ public class SpecProfileResponse {
                 .virtualNickname(specProfile.getUser().getVirtualNickname())
                 .major(specProfile.getMajor())
                 .gpa(specProfile.getGpa())
+                .gpaPercentile(gpaPercentile)
                 .toeicScore(specProfile.getToeicScore())
                 .desiredJob(specProfile.getDesiredJob())
                 .verificationCount(certCount)
