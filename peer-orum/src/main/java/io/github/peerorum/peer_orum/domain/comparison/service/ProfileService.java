@@ -55,6 +55,9 @@ public class ProfileService {
         specProfileRepository.save(newProfile);
         
         if (request.getNickname() != null && !request.getNickname().trim().isEmpty()) {
+            if (!request.getNickname().equals(user.getVirtualNickname()) && userRepository.existsByVirtualNickname(request.getNickname())) {
+                throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "이미 사용 중인 익명 이름입니다.");
+            }
             user.updateVirtualNickname(request.getNickname());
         }
         user.updateRole(Role.ROLE_USER);
@@ -82,6 +85,9 @@ public class ProfileService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
 
         if (nickname != null && !nickname.trim().isEmpty()) {
+            if (!nickname.equals(user.getVirtualNickname()) && userRepository.existsByVirtualNickname(nickname.trim())) {
+                throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "이미 사용 중인 익명 이름입니다.");
+            }
             user.updateVirtualNickname(nickname.trim());
         }
 
