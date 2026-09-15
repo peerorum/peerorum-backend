@@ -94,7 +94,9 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "http://localhost:3000",
                 "https://peerorum.vercel.app",
-                "https://peerorum-*.vercel.app"
+                "https://peerorum-*.vercel.app",
+                "https://peeroreum.site",
+                "https://www.peeroreum.site"
         ));
         configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(java.util.Arrays.asList("*"));
