@@ -103,4 +103,35 @@ public class DataFixerController {
             return ApiResponse.success("Error deleting user: " + e.getMessage());
         }
     }
+
+    @DeleteMapping("/cleanup-users")
+    @Transactional
+    public ApiResponse<String> cleanupUsers() {
+        try {
+            String selectSql = "SELECT id FROM users WHERE " +
+                "(name != \'단국대학우\' OR name IS NULL) AND " +
+                "role != 'ROLE_ADMIN' AND " +
+                "email NOT IN ('sjy303256@dankook.ac.kr', 'rnehrud0322@dankook.ac.kr', 'lmjaimnhj@gmail.com')";
+
+            List<Long> userIds = jdbcTemplate.queryForList(selectSql, Long.class);
+            
+            if (userIds.isEmpty()) {
+                return ApiResponse.success("No users to delete.");
+            }
+
+            for (Long userId : userIds) {
+                jdbcTemplate.update("DELETE FROM refresh_tokens WHERE user_id = ?", userId);
+                jdbcTemplate.update("DELETE FROM award WHERE user_id = ?", userId);
+                jdbcTemplate.update("DELETE FROM activity WHERE user_id = ?", userId);
+                jdbcTemplate.update("DELETE FROM intern WHERE user_id = ?", userId);
+                jdbcTemplate.update("DELETE FROM certificate WHERE user_id = ?", userId);
+                jdbcTemplate.update("DELETE FROM spec_profile WHERE user_id = ?", userId);
+                jdbcTemplate.update("DELETE FROM users WHERE id = ?", userId);
+            }
+
+            return ApiResponse.success("Successfully deleted " + userIds.size() + " users.");
+        } catch (Exception e) {
+            return ApiResponse.success("Error cleaning up users: " + e.getMessage());
+        }
+    }
 }
