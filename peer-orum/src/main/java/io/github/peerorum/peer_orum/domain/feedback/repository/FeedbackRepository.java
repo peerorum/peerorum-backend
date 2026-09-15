@@ -9,4 +9,8 @@ import java.util.List;
 @Repository
 public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     List<Feedback> findAllByOrderByCreatedAtDesc();
+
+    List<Feedback> findAllByBoardSummaryIsNotNullOrderByPublishedAtDesc();
+
+    List<Feedback> findAllByUserIdOrderByCreatedAtDesc(Long userId);
 }

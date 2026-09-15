@@ -68,9 +68,10 @@ public class SecurityConfig {
                                         "/api/auth/**",
                                         "/login/**",
                                         "/oauth2/**",
-                                        "/api/majors/**", "/api/admin/**", "/api/feedbacks/**"
+                                        "/api/majors/**", "/api/admin/**"
                                 ).permitAll()
-                                
+                                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/feedbacks").permitAll()
+
                                 .anyRequest()
                                 .authenticated()
                 )
