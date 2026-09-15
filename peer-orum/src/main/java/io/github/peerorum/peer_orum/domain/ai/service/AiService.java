@@ -3,6 +3,7 @@ package io.github.peerorum.peer_orum.domain.ai.service;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import io.github.peerorum.peer_orum.domain.ai.dto.AiJobInfoResponse;
+import io.github.peerorum.peer_orum.domain.ai.dto.AiVerificationResult;
 import io.github.peerorum.peer_orum.global.error.AiIntegrationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -101,20 +102,20 @@ public class AiService {
         }
     }
 
-    public boolean verifyDocument(String userName, String documentType, String expectedDetails, byte[] fileBytes, String mimeType) {
+    public AiVerificationResult verifyDocument(String userName, String documentType, String expectedDetails, byte[] fileBytes, String mimeType) {
         if (fileBytes == null || fileBytes.length == 0) {
             log.warn("Empty file bytes provided for document verification");
-            return false;
+            return new AiVerificationResult(false, "파일이 존재하지 않습니다.");
         }
 
         String prompt = String.format(
             "이 이미지는 '%s' 증빙 자료입니다. " +
             "제출자 이름: '%s'. " +
-            "다음 두 가지 조건을 모두 만족하는지 매우 엄격하게 검증해주세요: " +
+            "다음 두 가지 조건을 만족하는지 검증해주세요. (단, 학교명 등은 로고나 약칭으로 유추 가능하면 인정하고, 핵심인 학점 수치 및 점수 위주로 유연하게 판단하세요): " +
             "1. 이미지 내(주로 우측 상단 등)에 제출자 이름('%s')이 명시되어 있어야 합니다. " +
-            "2. 다음 문서 정보가 이미지 내 데이터와 정확히 일치해야 합니다: '%s'. " +
-            "두 조건 중 하나라도 만족하지 않으면 반드시 false를 반환하세요. " +
-            "조건을 모두 만족하면 {\"verified\": true}, 아니면 {\"verified\": false}를 JSON 형식으로만 반환하세요.",
+            "2. 다음 문서 정보가 이미지 내 데이터와 일치해야 합니다: '%s'. " +
+            "조건을 만족하면 {\"verified\": true, \"reason\": \"\"}를, " +
+            "만족하지 않으면 {\"verified\": false, \"reason\": \"구체적인 실패 사유\"}를 JSON 형식으로만 반환하세요.",
             documentType, userName, userName, expectedDetails
         );
 
@@ -157,15 +158,16 @@ public class AiService {
                         }
                         Map<String, Object> jsonMap = objectMapper.readValue(text, Map.class);
                         Boolean verified = (Boolean) jsonMap.get("verified");
-                        return verified != null && verified;
+                        String reason = (String) jsonMap.get("reason");
+                        return new AiVerificationResult(verified != null && verified, reason != null ? reason : "");
                     }
                 }
             }
             log.error("Failed to get valid response from Gemini API for document verification. Status: {}", response.getStatusCode());
-            return false;
+            return new AiVerificationResult(false, "AI API 응답 오류");
         } catch (Exception e) {
             log.error("Exception occurred while calling Gemini API for document verification", e);
-            return false;
+            return new AiVerificationResult(false, "AI 서버 처리 중 예외 발생: " + e.getMessage());
         }
     }
 }

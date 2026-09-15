@@ -14,6 +14,7 @@ import io.github.peerorum.peer_orum.domain.user.repository.UserRepository;
 import io.github.peerorum.peer_orum.global.error.CustomException;
 import io.github.peerorum.peer_orum.global.error.ErrorCode;
 import io.github.peerorum.peer_orum.domain.ai.service.AiService;
+import io.github.peerorum.peer_orum.domain.ai.dto.AiVerificationResult;
 import io.github.peerorum.peer_orum.domain.spec.dto.VerificationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,11 +53,14 @@ public class VerificationService {
                 .build();
 
         boolean isValid = false;
+        String reason = null;
 
         if (file != null && !file.isEmpty()) {
             try {
                 String expectedDetails = "자격증명: " + certName + ", 발급번호/점수: " + certNo;
-                isValid = aiService.verifyDocument(user.getName(), "자격증", expectedDetails, file.getBytes(), file.getContentType());
+                AiVerificationResult result = aiService.verifyDocument(user.getName(), "자격증", expectedDetails, file.getBytes(), file.getContentType());
+                isValid = result.isVerified();
+                reason = result.getReason();
             } catch (Exception e) {
                 log.error("Failed to read file bytes for AI verification", e);
             }
@@ -69,7 +73,7 @@ public class VerificationService {
         }
 
         Certificate saved = certificateRepository.save(certificate);
-        return new VerificationResponse(saved.getId(), saved.getStatus());
+        return VerificationResponse.builder().id(saved.getId()).status(saved.getStatus()).reason(reason).build();
     }
 
     @Transactional
@@ -88,10 +92,13 @@ public class VerificationService {
                 .build();
 
         boolean isValid = false;
+        String reason = null;
         if (file != null && !file.isEmpty()) {
             try {
                 String expectedDetails = "활동명: " + activityName + ", 인증키/내용: " + authKey;
-                isValid = aiService.verifyDocument(user.getName(), "대외활동", expectedDetails, file.getBytes(), file.getContentType());
+                AiVerificationResult result = aiService.verifyDocument(user.getName(), "대외활동", expectedDetails, file.getBytes(), file.getContentType());
+                isValid = result.isVerified();
+                reason = result.getReason();
             } catch (Exception e) {
                 log.error("Failed to read file bytes for AI verification", e);
             }
@@ -106,7 +113,7 @@ public class VerificationService {
         }
 
         Activity saved = activityRepository.save(activity);
-        return new VerificationResponse(saved.getId(), saved.getStatus());
+        return VerificationResponse.builder().id(saved.getId()).status(saved.getStatus()).reason(reason).build();
     }
 
     @Transactional
@@ -122,7 +129,7 @@ public class VerificationService {
                 .build();
 
         Intern saved = internRepository.save(intern);
-        return new VerificationResponse(saved.getId(), VerificationStatus.NONE);
+        return VerificationResponse.builder().id(saved.getId()).status(VerificationStatus.NONE).build();
     }
 
     @Transactional
@@ -139,7 +146,7 @@ public class VerificationService {
                 .build();
 
         Award saved = awardRepository.save(award);
-        return new VerificationResponse(saved.getId(), VerificationStatus.NONE);
+        return VerificationResponse.builder().id(saved.getId()).status(VerificationStatus.NONE).build();
     }
 
     public VerificationResponse requestGpaVerification(Long userId, Double gpa, String scoreType, Double percentile, Double majorAverage, MultipartFile file) {
@@ -147,6 +154,7 @@ public class VerificationService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
 
         boolean isValid = false;
+        String reason = null;
         if (file != null && !file.isEmpty()) {
             try {
                 StringBuilder detailsBuilder = new StringBuilder();
@@ -158,7 +166,9 @@ public class VerificationService {
                     detailsBuilder.append(", 전공평균평점: ").append(majorAverage);
                 }
                 String expectedDetails = detailsBuilder.toString();
-                isValid = aiService.verifyDocument(user.getName(), "대학교 학점 증명(DK UP 포맷)", expectedDetails, file.getBytes(), file.getContentType());
+                AiVerificationResult result = aiService.verifyDocument(user.getName(), "대학교 학점 증명(DK UP 포맷)", expectedDetails, file.getBytes(), file.getContentType());
+                isValid = result.isVerified();
+                reason = result.getReason();
             } catch (Exception e) {
                 log.error("Failed to read file bytes for GPA verification", e);
             }
@@ -171,7 +181,7 @@ public class VerificationService {
             });
         }
 
-        return new VerificationResponse(null, isValid ? VerificationStatus.VERIFIED : VerificationStatus.REJECTED);
+        return VerificationResponse.builder().status(isValid ? VerificationStatus.VERIFIED : VerificationStatus.REJECTED).reason(reason).build();
     }
 
     public VerificationResponse requestLanguageVerification(Long userId, String testName, String score, String date, MultipartFile file) {
@@ -179,10 +189,13 @@ public class VerificationService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "User not found"));
 
         boolean isValid = false;
+        String reason = null;
         if (file != null && !file.isEmpty()) {
             try {
                 String expectedDetails = "시험명: " + testName + ", 점수/등급: " + score + ", 취득일: " + (date != null ? date : "N/A");
-                isValid = aiService.verifyDocument(user.getName(), "어학 성적표", expectedDetails, file.getBytes(), file.getContentType());
+                AiVerificationResult result = aiService.verifyDocument(user.getName(), "어학 성적표", expectedDetails, file.getBytes(), file.getContentType());
+                isValid = result.isVerified();
+                reason = result.getReason();
             } catch (Exception e) {
                 log.error("Failed to read file bytes for Language verification", e);
             }
@@ -201,6 +214,6 @@ public class VerificationService {
             });
         }
 
-        return new VerificationResponse(null, isValid ? VerificationStatus.VERIFIED : VerificationStatus.REJECTED);
+        return VerificationResponse.builder().status(isValid ? VerificationStatus.VERIFIED : VerificationStatus.REJECTED).reason(reason).build();
     }
 }

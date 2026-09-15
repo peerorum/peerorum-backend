@@ -13,4 +13,5 @@ import lombok.NoArgsConstructor;
 public class VerificationResponse {
     private Long id;
     private VerificationStatus status;
+    private String reason;
 }
