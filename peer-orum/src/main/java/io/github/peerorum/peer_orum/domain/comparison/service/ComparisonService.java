@@ -29,6 +29,8 @@ import io.github.peerorum.peer_orum.domain.spec.entity.Award;
 @Service
 public class ComparisonService {
 
+    private static final String DEFAULT_UNIVERSITY = "단국대학교";
+
     private final SpecProfileRepository specProfileRepository;
     private final UserRepository userRepository;
     private final CertificateRepository certificateRepository;
@@ -114,18 +116,12 @@ public class ComparisonService {
         List<Intern> interns = internRepository.findByUser(targetUser);
         List<Award> awards = awardRepository.findByUser(targetUser);
 
-        List<SpecProfile> comparableProfiles = specProfileRepository.findAll().stream()
-                .filter(profile -> profile.getGpa() != null)
-                .collect(Collectors.toList());
-        double targetGpa = targetProfile.getGpa() != null ? targetProfile.getGpa() : 0.0;
-        long higherGpaCount = comparableProfiles.stream()
-                .filter(profile -> profile.getGpa() > targetGpa)
-                .count();
-        int gpaPercentile = comparableProfiles.isEmpty()
-                ? 0
-                : Math.max(1, (int) Math.ceil(
-                        (higherGpaCount + 1) * 100.0 / comparableProfiles.size()
-                ));
+        List<SpecProfile> comparableProfiles = findGpaCohort(
+                targetProfile.getUniversity(), targetProfile.getMajor()
+        );
+        int gpaPercentile = calculateGpaPercentile(
+                targetProfile.getGpa(), comparableProfiles
+        );
 
         return ProfileDetailResponse.builder()
                 .anonymousUuid(targetUser.getAnonymousUuid())
@@ -146,15 +142,46 @@ public class ComparisonService {
 
     @Transactional(readOnly = true)
     public List<SpecProfileResponse> searchPeers(String university, String major, Integer entranceYear, String desiredJob, Double minGpa, Double maxGpa) {
-        List<SpecProfile> peers = specProfileRepository.searchPeers(university, major, entranceYear, desiredJob, minGpa, maxGpa);
+        String effectiveUniversity = university == null || university.isBlank()
+                ? DEFAULT_UNIVERSITY
+                : university;
+        List<SpecProfile> peers = specProfileRepository.searchPeers(
+                effectiveUniversity, major, entranceYear, desiredJob, minGpa, maxGpa
+        );
+        List<SpecProfile> comparableProfiles = findGpaCohort(effectiveUniversity, major);
         return peers.stream()
                 .map(p -> {
                     int certs = certificateRepository.findByUser(p.getUser()).size();
                     int interns = internRepository.findByUser(p.getUser()).size();
                     int activities = activityRepository.findByUser(p.getUser()).size();
                     int awards = awardRepository.findByUser(p.getUser()).size();
-                    return SpecProfileResponse.of(p, certs, interns, activities, awards);
+                    int gpaPercentile = calculateGpaPercentile(p.getGpa(), comparableProfiles);
+
+                    return SpecProfileResponse.of(
+                            p, certs, interns, activities, awards, gpaPercentile
+                    );
                 })
                 .collect(Collectors.toList());
+    }
+
+    private List<SpecProfile> findGpaCohort(String university, String major) {
+        return specProfileRepository.findPeers(university, major, null, null).stream()
+                .filter(profile -> profile.getGpa() != null)
+                .filter(profile -> profile.getGpa() >= 0.0 && profile.getGpa() <= 4.5)
+                .collect(Collectors.toList());
+    }
+
+    private int calculateGpaPercentile(Double targetGpa, List<SpecProfile> comparableProfiles) {
+        if (targetGpa == null || !(targetGpa >= 0.0 && targetGpa <= 4.5) || comparableProfiles.isEmpty()) {
+            return 0;
+        }
+
+        long higherGpaCount = comparableProfiles.stream()
+                .filter(profile -> profile.getGpa() > targetGpa)
+                .count();
+
+        return Math.max(1, (int) Math.ceil(
+                (higherGpaCount + 1) * 100.0 / comparableProfiles.size()
+        ));
     }
 }
