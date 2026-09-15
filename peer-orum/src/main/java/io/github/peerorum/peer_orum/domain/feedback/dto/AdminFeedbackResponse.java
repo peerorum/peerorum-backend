@@ -9,21 +9,29 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-public class FeedbackResponse {
+public class AdminFeedbackResponse {
     private Long id;
+    private String authorNickname;
     private String content;
     private String contact;
     private FeedbackStatus status;
-    private Long upvotes;
+    private String answer;
+    private LocalDateTime answeredAt;
+    private String boardSummary;
+    private LocalDateTime publishedAt;
     private LocalDateTime createdAt;
 
-    public static FeedbackResponse from(Feedback feedback) {
-        return FeedbackResponse.builder()
+    public static AdminFeedbackResponse from(Feedback feedback) {
+        return AdminFeedbackResponse.builder()
                 .id(feedback.getId())
+                .authorNickname(feedback.getUser() != null ? feedback.getUser().getVirtualNickname() : null)
                 .content(feedback.getContent())
                 .contact(feedback.getContact())
                 .status(feedback.getStatus())
-                .upvotes(feedback.getUpvotes())
+                .answer(feedback.getAnswer())
+                .answeredAt(feedback.getAnsweredAt())
+                .boardSummary(feedback.getBoardSummary())
+                .publishedAt(feedback.getPublishedAt())
                 .createdAt(feedback.getCreatedAt())
                 .build();
     }
