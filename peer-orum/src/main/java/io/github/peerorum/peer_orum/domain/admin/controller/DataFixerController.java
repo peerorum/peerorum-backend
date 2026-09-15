@@ -103,4 +103,20 @@ public class DataFixerController {
             return ApiResponse.success("Error deleting user: " + e.getMessage());
         }
     }
+
+    @org.springframework.web.bind.annotation.PostMapping("/grant-admin")
+    @Transactional
+    public ApiResponse<String> grantAdmin(@RequestParam String email) {
+        try {
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ApiResponse.success("User not found with email: " + email);
+            }
+            User user = userOpt.get();
+            user.updateRole(Role.ROLE_ADMIN);
+            return ApiResponse.success("Successfully granted ADMIN role to: " + email);
+        } catch (Exception e) {
+            return ApiResponse.success("Error granting ADMIN role: " + e.getMessage());
+        }
+    }
 }
